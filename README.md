@@ -1,10 +1,16 @@
 uRPG (working title)
 ====
 
-Neste jogo, o jogador controla um grupo de aventureiros que viaja pelo mundo buscando missões (e, mais importante, recompensas) em diversas cidades.
+uRPG é um RPG tático com batalhas em turnos. Um grupo de aventureiros viaja pelo mundo buscando missões em diversas cidades. Ou, mais importante: Buscando recompensas. Para isso, tentam ser guerreiros cada vez mais fortes e melhor equipados, para buscar gratificações cada vez maiores.
 
-Não há cidades no jogo em si - as cidades existem em hotspots no mundo real, e permitem interações entre jogadores sem exigir que ambos estejam lá simultaneamente. Uma das principais funções da cidade é permitir a compra e venda de itens diversos obtidos de inimigos, que podem ser usados para criar equipamentos melhores para seus personagens. Além disso, as cidades fornecem missões diariamente para que o jogador consiga mais dinheiro.
+Trata-se de um jogo 2D. As cidades e o world map funcionam como menus, com o jogador selecionando a área que quer visitar, e as batalhas ocorrem com sprites, representando os personagens e inimigos, e animações para cada ação.
 
-Quando o jogador não está conectado a uma cidade, ele pode explorar diferentes áreas (fictícias) para realizar as suas missões, ou, simplesmente, para caçar monstros e obter os espólios. As batalhas ocorrem numa arena tile-based, num estilo tático turn-based.
+A aplicação existe em dois perfis: Uma quando é executada é executada num laptop, e outra quando num PC. O jogo em si acontece no primeiro perfil: O jogador começa com apenas um personagem na equipe, cuja classe é determinada pelo nome de usuário da sessão. 
 
-O jogo usa o middleware uOS para gerenciar o smart space, composto por um computador rodando a cidade (um perfil da aplicação), e outros conectados a ele ou entre si.
+A tela principal é o world map, contendo um conjunto de áreas que podem ser visitadas. Existe um conjunto de áreas padrão, mas caso o jogador esteja conectado a uma rede, o SSID da mesma determinará um conjunto de áreas que podem ser visitadas. Ao entrar numa área, uma batalha se inicia. O grupo de monstros é determinado pela área, pelos equipamentos do grupo e pela claridade do ambiente físico onde o jogador se encontra.
+
+A batalha ocorre numa grade hexagonal, com cada personagem e inimigo tendo seu turno. Durante o turno, cada personagem pode executar uma ação dentre atacar, usar uma habilidade, ou usar um item. Quando todos os inimigos são derrotados, o jogador recebe espólios, que podem ser usados para obter equipamentos melhores para sua equipe.
+
+O segundo perfil da aplicação é o de uma cidade.
+
+Under Construction...
