@@ -9,8 +9,14 @@ A aplicação existe em dois perfis: Uma quando é executada é executada num la
 
 A tela principal é o world map, contendo um conjunto de áreas que podem ser visitadas. Existe um conjunto de áreas padrão, mas caso o jogador esteja conectado a uma rede, o SSID da mesma determinará um conjunto de áreas que podem ser visitadas. Ao entrar numa área, uma batalha se inicia. O grupo de monstros é determinado pela área, pelos equipamentos do grupo e pela claridade do ambiente físico onde o jogador se encontra.
 
-A batalha ocorre numa grade hexagonal, com cada personagem e inimigo tendo seu turno. Durante o turno, cada personagem pode executar uma ação dentre atacar, usar uma habilidade, ou usar um item. Quando todos os inimigos são derrotados, o jogador recebe espólios, que podem ser usados para obter equipamentos melhores para sua equipe.
+A batalha ocorre numa grade hexagonal, com cada personagem e inimigo tendo seu turno. Durante o turno, cada personagem pode executar uma ação dentre atacar, usar uma habilidade, ou usar um item. Se, na mesma rede que o jogador está, houver outro jogador conectado, os dois podem receber um bônus nos atributos de um dos seus personagens para ajudar na luta. Quando todos os inimigos são derrotados, o jogador recebe espólios, que podem ser usados para obter equipamentos melhores para sua equipe.
 
-O segundo perfil da aplicação é o de uma cidade.
+O segundo perfil da aplicação é o de uma cidade. Um PC na rede rodando a aplicação neste perfil adiciona uma nova área ao mapa da região, uma cidade, onde se pode fazer algumas coisas não disponíveis no jogo comum. A cidade fornece um número limitado de missões num dia, que, se completadas, dão recompensas em gold coins. Essas missões também podem mudar, de acordo com a claridade detectada pela webcam.
 
-Under Construction...
+Além disso, o jogador pode recrutar novos membros de uma determinada classe para a sua equipe, e comprar novas habilidades para personagens dessa classe, o que é importante para a sua progressão. Mais importante do que isso, no entanto, é estar com uma equipe bem equipada, e nisso, o marketplace da cidade é de vital importância.
+
+No marketplace, a cidade oferece, constantemente, uma série de itens para o jogador. No entanto, estes são apenas itens básicos: para obter equipamentos melhores, o jogador deve obter componentes para a sua criação entre os espólios de batalhas. Como os espólios e encontros são difíceis de prever, o marketplace permite que um jogador ponha componentes que não precisa à venda para outros jogadores que precisem deles.
+
+Uma cidade não compartilha dados diretamente com outras, logo, existe uma motivação para o jogador tentar visitar várias cidades, tanto para melhorar diferentes classes, como para aceitar mais missões, como para buscar itens que podem estar à venda nas mesmas.
+
+O jogo se dá em ambientes fechados onde haja uma rede, com PCs e laptops conectados. Note que, apesar de um ambiente ser isolado de outros, é aconselhavel que os jogadores (laptops) mudem de ambiente quando puderem. Tanto os PCs quanto os laptops devem dispor de webcams. Os laptops devem possuir recursos gráficos, além de mouse e teclado.
