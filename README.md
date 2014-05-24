@@ -20,3 +20,15 @@ No marketplace, a cidade oferece, constantemente, uma série de itens para o jog
 Uma cidade não compartilha dados diretamente com outras, logo, existe uma motivação para o jogador tentar visitar várias cidades, tanto para melhorar diferentes classes, como para aceitar mais missões, como para buscar itens que podem estar à venda nas mesmas.
 
 O jogo se dá em ambientes fechados onde há uma rede, com PCs e laptops conectados. Note que, apesar de um ambiente ser isolado de outros, é aconselhavel que os jogadores (laptops) visitem o máximo de ambientes. Tanto os PCs quanto os laptops devem dispor de webcams. Os laptops devem possuir recursos gráficos, além de mouse e teclado.
+
+A aplicação oferece os seguintes recursos e serviços:
+
+- Em um PC
+  - Geração de missões e personagens novos
+  - Destravar habilidades
+  - Troca de itens entre jogadores
+
+- Em um laptop
+  - Buscar outros jogadores próximos
+  - Buscar dados da rede
+  - Geração de batalhas e espólios
