@@ -21,7 +21,7 @@ public class Main {
 
                 if (args.length == 2 && args[0].equals("-rp"))
                     put("root_path", args[1]);
-                put("first_scene", BattleScene.class);
+                put("first_scene", WorldMapScene.class);
                 put("input_managers", new ArrayList<Class<?>>() {
                     {
                         add(KeyboardManager.class);

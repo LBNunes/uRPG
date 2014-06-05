@@ -1,49 +1,43 @@
 package game;
 
+import game.WorldMapScene.WorldArea;
+
 import org.unbiquitous.uImpala.engine.asset.AssetManager;
 import org.unbiquitous.uImpala.engine.asset.Sprite;
-import org.unbiquitous.uImpala.engine.core.Game;
 import org.unbiquitous.uImpala.engine.core.GameComponents;
 import org.unbiquitous.uImpala.engine.core.GameObject;
 import org.unbiquitous.uImpala.engine.core.GameRenderers;
-import org.unbiquitous.uImpala.engine.io.MouseEvent;
-import org.unbiquitous.uImpala.engine.io.MouseSource;
 import org.unbiquitous.uImpala.engine.io.Screen;
 import org.unbiquitous.uImpala.util.Corner;
-import org.unbiquitous.uImpala.util.observer.Event;
-import org.unbiquitous.uImpala.util.observer.Observation;
-import org.unbiquitous.uImpala.util.observer.Subject;
 
-@SuppressWarnings("unused")
 public class Grid extends GameObject {
 
-    private Sprite      bg;
-    private Sprite      clearHex;
-    private Sprite      redHex;
-    private Sprite      greenHex;
-    private Sprite      blueHex;
-    private Sprite      yellowHex;
+    private Sprite    bg;
+    private Sprite    clearHex;
+    private Sprite    redHex;
+    private Sprite    greenHex;
+    private Sprite    blueHex;
+    private Sprite    yellowHex;
 
-    private Screen      screen;
-    private MouseSource mouse;
+    private Screen    screen;
 
-    static final int    hexRadius   = 58;
-    static final int    hexHeight   = 50;
-    static final int    hexSide     = 29;
-    static final int    hexXOffset  = hexHeight * 2;
-    static final int    hexYOffset  = hexRadius + hexSide;
+    static final int  hexRadius   = 58;
+    static final int  hexHeight   = 50;
+    static final int  hexSide     = 29;
+    static final int  hexXOffset  = hexHeight * 2;
+    static final int  hexYOffset  = hexRadius + hexSide;
 
-    static final int    gridOffsetX = 40;
-    static final int    gridOffsetY = 56;
+    static final int  gridOffsetX = 40;
+    static final int  gridOffsetY = 56;
 
-    static final int    topHexX     = gridOffsetX + hexHeight;
-    static final int    topHexY     = gridOffsetY + hexRadius;
+    static final int  topHexX     = gridOffsetX + hexHeight;
+    static final int  topHexY     = gridOffsetY + hexRadius;
 
-    static final int    nColumnsMax = 12;
-    static final int    nColumnsMin = 11;
-    static final int    nRows       = 7;
+    static final int  nColumnsMax = 12;
+    static final int  nColumnsMin = 11;
+    static final int  nRows       = 7;
 
-    HexColors           gridColors[][];
+    private HexColors gridColors[][];
 
     public enum HexColors {
         CLEAR, RED, GREEN, BLUE, YELLOW
@@ -53,8 +47,8 @@ public class Grid extends GameObject {
         SINGLE_HEX, CIRCLE, DIAGONAL_UP_LINE, DIAGONAL_DOWN_LINE, HORIZONTAL_LINE, ALL
     }
 
-    public Grid(AssetManager assets) {
-        bg = assets.newSprite(Config.GRASS_BG);
+    public Grid(AssetManager assets, WorldArea area) {
+        bg = LoadBG(assets, area);
         clearHex = assets.newSprite(Config.CLEAR_HEX);
         redHex = assets.newSprite(Config.RED_HEX);
         greenHex = assets.newSprite(Config.GREEN_HEX);
@@ -62,14 +56,14 @@ public class Grid extends GameObject {
         yellowHex = assets.newSprite(Config.YELLOW_HEX);
 
         gridColors = new HexColors[nColumnsMax][nRows];
-        clearColors(HexColors.CLEAR);
+        ClearColors(HexColors.CLEAR);
 
         screen = GameComponents.get(Screen.class);
-        mouse = screen.getMouse();
-        mouse.connect(MouseSource.EVENT_BUTTON_DOWN, new Observation(this, "buttonDown"));
+
+        System.out.println("Created Grid.");
     }
 
-    private void clearColors(HexColors fill) {
+    public void ClearColors(HexColors fill) {
         for (int i = 0; i < nColumnsMax; ++i) {
             for (int j = 0; j < nRows; ++j) {
                 gridColors[i][j] = fill;
@@ -77,15 +71,19 @@ public class Grid extends GameObject {
         }
     }
 
-    private void renderAtHex(Sprite s, int x, int y) {
-        Point p = findHexPosition(x, y);
-        if (p != null)
-            s.render(screen, p.x, p.y, Corner.CENTER);
+    public void RenderAtHex(Sprite s, int x, int y) {
+        RenderAtHex(s, x, y, 1.0f);
     }
 
-    private Point findHexPosition(int x, int y) {
+    public void RenderAtHex(Sprite s, int x, int y, float opacity) {
+        Point p = FindHexPosition(x, y);
+        if (p != null)
+            s.render(screen, p.x, p.y, Corner.CENTER, opacity);
+    }
 
-        if (!validHexPosition(x, y))
+    public Point FindHexPosition(int x, int y) {
+
+        if (!ValidHexPosition(x, y))
             return null;
 
         Point pos = new Point((int) (topHexX + x * hexXOffset), (int) (topHexY + y * hexYOffset));
@@ -96,7 +94,66 @@ public class Grid extends GameObject {
         return pos;
     }
 
-    private boolean validHexPosition(int x, int y) {
+    public Point FindHexByPixel(int x, int y) {
+
+        // More info about this method:
+        // http://stackoverflow.com/questions/7705228/hexagonal-grids-how-do-you-find-which-hexagon-a-point-is-in
+        int brickWidth = (2 * hexHeight);
+        int brickHeight = (hexSide * 2 + (hexRadius - hexSide));
+
+        int row, column;
+
+        // First, simplify the grid into a "wall of bricks", and find the row and column that the pixel is in
+        row = (y - gridOffsetY) / brickHeight;
+
+        if (row % 2 == 1) {
+            column = (x - gridOffsetX - hexHeight) / brickWidth;
+        }
+        else {
+            column = (x - gridOffsetX) / brickWidth;
+        }
+
+        // Next, find the position of the pixel relative to the brick's top-left corner
+        int relX, relY;
+
+        relY = y - gridOffsetY - (row * brickHeight);
+
+        if (row % 2 == 1) {
+            relX = x - gridOffsetX - (column * brickWidth) - hexHeight;
+        }
+        else {
+            relX = x - gridOffsetX - (column * brickWidth);
+        }
+
+        // Now, analyze that position to discover whether the pixel "escapes" to the upper hex
+        // This is through the line equation y = +-m * x + c
+        int c = hexRadius - hexSide;
+        double m = c / (double) hexHeight;
+        // Left triangle
+        if (relX < hexHeight + 1) {
+            if (relY < (-m * relX) + c) {
+                row -= 1;
+                if (row % 2 == 1) {
+                    column -= 1;
+                }
+            }
+        }
+        // Right triangle
+        else {
+            if (relY < (m * relX) - c) {
+                row -= 1;
+                if (row % 2 == 0) {
+                    column += 1;
+                }
+            }
+        }
+
+        Point pos = new Point(column, row);
+
+        return pos;
+    }
+
+    public boolean ValidHexPosition(int x, int y) {
         if (y % 2 == 1) {
             if (x >= nColumnsMin) {
                 return false;
@@ -117,9 +174,9 @@ public class Grid extends GameObject {
 
     }
 
-    private void colorArea(int x, int y, GridArea area, HexColors fill, int complement) {
+    public void ColorArea(int x, int y, GridArea area, HexColors fill, int complement) {
 
-        if (!validHexPosition(x, y) && area != GridArea.ALL)
+        if (!ValidHexPosition(x, y) && area != GridArea.ALL)
             return;
 
         System.out.println("Coloring hex " + x + ", " + y);
@@ -134,18 +191,18 @@ public class Grid extends GameObject {
                 gridColors[x][y] = fill;
                 // If the radius is 1 or more, color the hexes/circles centered around it
                 if (complement > 0) {
-                    colorArea(x, y + 1, area, fill, complement - 1);
-                    colorArea(x, y - 1, area, fill, complement - 1);
-                    colorArea(x + 1, y, area, fill, complement - 1);
-                    colorArea(x - 1, y, area, fill, complement - 1);
+                    ColorArea(x, y + 1, area, fill, complement - 1);
+                    ColorArea(x, y - 1, area, fill, complement - 1);
+                    ColorArea(x + 1, y, area, fill, complement - 1);
+                    ColorArea(x - 1, y, area, fill, complement - 1);
 
                     if (y % 2 == 1) {
-                        colorArea(x + 1, y + 1, area, fill, complement - 1);
-                        colorArea(x + 1, y - 1, area, fill, complement - 1);
+                        ColorArea(x + 1, y + 1, area, fill, complement - 1);
+                        ColorArea(x + 1, y - 1, area, fill, complement - 1);
                     }
                     else {
-                        colorArea(x - 1, y + 1, area, fill, complement - 1);
-                        colorArea(x - 1, y - 1, area, fill, complement - 1);
+                        ColorArea(x - 1, y + 1, area, fill, complement - 1);
+                        ColorArea(x - 1, y - 1, area, fill, complement - 1);
                     }
                 }
                 break;
@@ -155,19 +212,19 @@ public class Grid extends GameObject {
                 gridColors[x][y] = fill;
                 if (complement > 0) {
                     if (y % 2 == 1) {
-                        colorArea(x + 1, y - 1, area, fill, complement - 1);
+                        ColorArea(x + 1, y - 1, area, fill, complement - 1);
                     }
                     else {
-                        colorArea(x, y - 1, area, fill, complement - 1);
+                        ColorArea(x, y - 1, area, fill, complement - 1);
                     }
                 }
                 // If it's less than 0, fill the hex (-1, +1)
                 else if (complement < 0) {
                     if (y % 2 == 1) {
-                        colorArea(x, y + 1, area, fill, complement - 1);
+                        ColorArea(x, y + 1, area, fill, complement + 1);
                     }
                     else {
-                        colorArea(x - 1, y + 1, area, fill, complement - 1);
+                        ColorArea(x - 1, y + 1, area, fill, complement + 1);
                     }
                 }
                 break;
@@ -176,19 +233,19 @@ public class Grid extends GameObject {
                 gridColors[x][y] = fill;
                 if (complement > 0) {
                     if (y % 2 == 1) {
-                        colorArea(x + 1, y + 1, area, fill, complement - 1);
+                        ColorArea(x + 1, y + 1, area, fill, complement - 1);
                     }
                     else {
-                        colorArea(x, y + 1, area, fill, complement - 1);
+                        ColorArea(x, y + 1, area, fill, complement - 1);
                     }
                 }
                 // If it's less than 0, fill the hex (-1, +1)
                 else if (complement < 0) {
                     if (y % 2 == 1) {
-                        colorArea(x, y - 1, area, fill, complement - 1);
+                        ColorArea(x, y - 1, area, fill, complement + 1);
                     }
                     else {
-                        colorArea(x - 1, y - 1, area, fill, complement - 1);
+                        ColorArea(x - 1, y - 1, area, fill, complement + 1);
                     }
                 }
                 break;
@@ -197,56 +254,58 @@ public class Grid extends GameObject {
                 gridColors[x][y] = fill;
                 // If the length is more than 0, fill the hex (+1, +0)
                 if (complement > 0) {
-                    colorArea(x + 1, y, area, fill, complement - 1);
+                    ColorArea(x + 1, y, area, fill, complement - 1);
                 }
                 // If it's less than 0, fill the hex (-1, +0)
                 else if (complement < 0) {
-                    colorArea(x - 1, y, area, fill, complement - 1);
+                    ColorArea(x - 1, y, area, fill, complement + 1);
                 }
                 break;
             // Color the whole grid - Complement is ignored.
             case ALL:
-                clearColors(fill);
+                ClearColors(fill);
                 break;
         }
     }
 
     @Override
-    protected void render(GameRenderers renderers) {
+    public void render(GameRenderers renderers) {
         bg.render(screen, 0, 0, Corner.TOP_LEFT);
 
         for (int i = 0; i < nColumnsMax; ++i) {
             for (int j = 0; j < nRows; ++j) {
                 switch (gridColors[i][j]) {
                     case RED:
-                        renderAtHex(redHex, i, j);
+                        RenderAtHex(redHex, i, j, 0.60f);
                         break;
                     case GREEN:
-                        renderAtHex(greenHex, i, j);
+                        RenderAtHex(greenHex, i, j, 0.60f);
                         break;
                     case BLUE:
-                        renderAtHex(blueHex, i, j);
-                        break;
-                    case CLEAR:
-                        renderAtHex(clearHex, i, j);
+                        RenderAtHex(blueHex, i, j, 0.60f);
                         break;
                     case YELLOW:
-                        renderAtHex(yellowHex, i, j);
+                        RenderAtHex(yellowHex, i, j, 0.60f);
+                        break;
+                    case CLEAR:
+                        RenderAtHex(clearHex, i, j);
+                        break;
                 }
             }
         }
     }
 
-    private void buttonDown(Event event, Subject subject) {
-        MouseEvent e = (MouseEvent) event;
-        colorArea(6, 3, GridArea.DIAGONAL_DOWN_LINE, HexColors.RED, -4);
+    private Sprite LoadBG(AssetManager assets, WorldArea area) {
+        switch (area) {
+            case GRASSLAND:
+                return assets.newSprite(Config.GRASS_BG);
+            default:
+                return null;
+        }
     }
 
     @Override
-    protected void update() {
-        if (screen.isCloseRequested()) {
-            GameComponents.get(Game.class).quit();
-        }
+    public void update() {
 
     }
 
