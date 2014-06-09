@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) Luísa Bontempo Nunes
-//     Created on 2014-06-04 ymd
+//     Created on 2014-06-07 ymd
 //
 // X11 Licensed Code
 //
@@ -27,36 +27,46 @@
 
 package game;
 
-public class Stats {
+public class SystemInformation {
 
-    public int HP;
-    public int MP;
-    public int atk;
-    public int def;
-    public int mag;
-    public int res;
-    public int spd;
-
-    public Stats() {
-        HP = 0;
-        MP = 0;
-        atk = 0;
-        def = 0;
-        mag = 0;
-        res = 0;
+    public static String GetUserName() {
+        return System.getProperty("user.name");
     }
 
-    public Stats(int HP, int MP, int atk, int def, int mag, int res, int spd) {
-        SetAll(HP, MP, atk, def, mag, res, spd);
+    public static String GetOS() {
+        return System.getProperty("os.name");
     }
 
-    public void SetAll(int HP, int MP, int atk, int def, int mag, int res, int spd) {
-        this.HP = HP;
-        this.MP = MP;
-        this.atk = atk;
-        this.def = def;
-        this.mag = mag;
-        this.res = res;
-        this.spd = spd;
+    public static String GetOSVersion() {
+        return System.getProperty("os.version");
+    }
+
+    public static boolean IsWindows() {
+        return GetOS().startsWith("Windows");
+    }
+
+    public static boolean HasBattery() {
+        if (IsWindows()) {
+            Kernel32.SYSTEM_POWER_STATUS batteryStatus = new Kernel32.SYSTEM_POWER_STATUS();
+            Kernel32.INSTANCE.GetSystemPowerStatus(batteryStatus);
+
+            return batteryStatus.BatteryFlag != (byte) 128;
+        }
+        else {
+            // TODO: Linux support
+            return false;
+        }
+    }
+
+    public static void PrintBatteryInformation() {
+        if (IsWindows()) {
+            Kernel32.SYSTEM_POWER_STATUS batteryStatus = new Kernel32.SYSTEM_POWER_STATUS();
+            Kernel32.INSTANCE.GetSystemPowerStatus(batteryStatus);
+
+            System.out.println(batteryStatus);
+        }
+        else {
+            // TODO: Linux support
+        }
     }
 }

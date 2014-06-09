@@ -1,3 +1,30 @@
+/////////////////////////////////////////////////////////////////////////
+//
+// Copyright (c) Luísa Bontempo Nunes
+//     Created on 2014-05-26 ymd
+//
+// X11 Licensed Code
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+/////////////////////////////////////////////////////////////////////////
+
 package game;
 
 import game.Classes.ClassID;
@@ -10,48 +37,64 @@ import org.unbiquitous.uImpala.engine.core.GameRenderers;
 
 public class Entity extends GameObject {
 
-    public Point   pos;
-    public Sprite  sp;
-    public Stats   stats;
-    public String  name;
-    public String  className;
-    public ClassID charClass;
-    public Item    equipment[];
-    public int     jobLevel;
-    public int     currentHP;
-    public int     currentMP;
+    public Point    pos;
+    public Sprite   sp;
+    public Stats    stats;
+    public String   name;
+    public String   className;
+    public ClassID  classID;
+    public EquipSet equipment;
+    public int      moveRange;
+    public int      jobLevel;
+    public int      enemyID;
+    public int      currentHP;
+    public int      currentMP;
+    public int      turnTimer;
+    public boolean  playerUnit;
 
-    public Entity(AssetManager assets, String sprite, String name, ClassID charClass, String className, int jobLevel) {
+    public Entity(AssetManager assets, String name, ClassID classID, int jobLevel) {
+        playerUnit = true;
+
         pos = new Point();
-        sp = assets.newSprite(sprite);
+        sp = assets.newSprite(Classes.GetClassSprite(classID));
         this.name = name;
-        this.className = className;
-        this.charClass = charClass;
-        equipment = new Item[3];
-        SetEquipment(ItemSlot.WEAPON, 000);
-        SetEquipment(ItemSlot.ARMOR, 000);
-        SetEquipment(ItemSlot.EXTRA, 000);
+        this.className = Classes.GetClassName(classID);
+        this.classID = classID;
+        equipment = new EquipSet();
 
         this.jobLevel = jobLevel;
 
+        enemyID = 000;
+
+        moveRange = Classes.GetMoveRange(classID);
+
         RecalculateStats();
         FullHeal();
+
+        turnTimer = 0;
     }
 
-    public void SetEquipment(ItemSlot slot, int itemID) {
-        switch (slot) {
-            case WEAPON:
-                equipment[0] = Item.GetItem(itemID);
-                break;
-            case ARMOR:
-                equipment[1] = Item.GetItem(itemID);
-                break;
-            case EXTRA:
-                equipment[2] = Item.GetItem(itemID);
-                break;
-            case NONE:
-                break;
-        }
+    public Entity(AssetManager assets, int enemyID, int jobLevel) {
+        playerUnit = false;
+
+        pos = new Point();
+        sp = assets.newSprite(Enemies.GetSprite(enemyID));
+
+        name = Enemies.GetName();
+        className = Enemies.GetType(enemyID);
+
+        classID = Enemies.GetClass(enemyID);
+        equipment = Enemies.GetEquipment(jobLevel);
+
+        this.enemyID = enemyID;
+        this.jobLevel = jobLevel;
+
+        moveRange = Enemies.GetMoveRange(enemyID);
+
+        RecalculateStats();
+        FullHeal();
+
+        turnTimer = 0;
     }
 
     public void FullHeal() {
@@ -60,20 +103,44 @@ public class Entity extends GameObject {
     }
 
     public void RecalculateStats() {
-        if (charClass != ClassID.NONE) {
-            Stats base = Classes.GetBaseStats(charClass);
-            int HP = base.HP + equipment[0].GetBonusHP() + equipment[1].GetBonusHP() + equipment[2].GetBonusHP();
-            int MP = base.MP + equipment[0].GetBonusMP() + equipment[1].GetBonusMP() + equipment[2].GetBonusMP();
-            int atk = base.atk + equipment[0].GetBonusAtk() + equipment[1].GetBonusAtk() + equipment[2].GetBonusAtk();
-            int def = base.def + equipment[0].GetBonusDef() + equipment[1].GetBonusDef() + equipment[2].GetBonusDef();
-            int mag = base.mag + equipment[0].GetBonusMag() + equipment[1].GetBonusMag() + equipment[2].GetBonusMag();
-            int res = base.res + equipment[0].GetBonusRes() + equipment[1].GetBonusRes() + equipment[2].GetBonusRes();
-            int spd = base.spd + equipment[0].GetBonusSpd() + equipment[1].GetBonusSpd() + equipment[2].GetBonusSpd();
-            this.stats = new Stats(HP, MP, atk, def, mag, res, spd);
+        Stats base;
+        if (playerUnit) {
+            base = Classes.GetBaseStats(classID);
         }
         else {
-            // TODO: Enemies!
+            base = Enemies.GetBaseStats(enemyID);
         }
+        int HP = base.HP +
+                 equipment.Get(ItemSlot.WEAPON).GetBonusHP() +
+                 equipment.Get(ItemSlot.ARMOR).GetBonusHP() +
+                 equipment.Get(ItemSlot.EXTRA).GetBonusHP();
+        int MP = base.MP +
+                 equipment.Get(ItemSlot.WEAPON).GetBonusMP() +
+                 equipment.Get(ItemSlot.ARMOR).GetBonusMP() +
+                 equipment.Get(ItemSlot.EXTRA).GetBonusMP();
+        int atk = base.atk +
+                  equipment.Get(ItemSlot.WEAPON).GetBonusAtk() +
+                  equipment.Get(ItemSlot.ARMOR).GetBonusAtk() +
+                  equipment.Get(ItemSlot.EXTRA).GetBonusAtk();
+        int def = base.def +
+                  equipment.Get(ItemSlot.WEAPON).GetBonusDef() +
+                  equipment.Get(ItemSlot.ARMOR).GetBonusDef() +
+                  equipment.Get(ItemSlot.EXTRA).GetBonusDef();
+        int mag = base.mag +
+                  equipment.Get(ItemSlot.WEAPON).GetBonusMag() +
+                  equipment.Get(ItemSlot.ARMOR).GetBonusMag() +
+                  equipment.Get(ItemSlot.EXTRA).GetBonusMag();
+        int res = base.res +
+                  equipment.Get(ItemSlot.WEAPON).GetBonusRes() +
+                  equipment.Get(ItemSlot.ARMOR).GetBonusRes() +
+                  equipment.Get(ItemSlot.EXTRA).GetBonusRes();
+        int spd = base.spd +
+                  equipment.Get(ItemSlot.WEAPON).GetBonusSpd() +
+                  equipment.Get(ItemSlot.ARMOR).GetBonusSpd() +
+                  equipment.Get(ItemSlot.EXTRA).GetBonusSpd();
+
+        this.stats = new Stats(HP, MP, atk, def, mag, res, spd);
+
     }
 
     @Override
@@ -90,6 +157,11 @@ public class Entity extends GameObject {
 
     @Override
     protected void destroy() {
+    }
+
+    public void Move(int x, int y) {
+        pos.x = x;
+        pos.y = y;
     }
 
 }

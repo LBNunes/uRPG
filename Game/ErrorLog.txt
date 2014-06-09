@@ -1,0 +1,225 @@
+Sat May 24 10:06:24 BRT 2014: java.lang.NullPointerException
+  org.unbiquitous.uImpala.engine.core.Game.init(Game.java:200)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:107)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+
+Sat May 24 10:07:53 BRT 2014: java.lang.RuntimeException: Resource not found: ./img/grid.jpg
+  org.unbiquitous.uImpala.engine.core.Game.init(Game.java:200)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:107)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+
+Sat May 24 10:09:39 BRT 2014: java.lang.RuntimeException: Resource not found: ./img/grid.jpg
+  org.unbiquitous.uImpala.engine.core.Game.init(Game.java:200)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:107)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+
+Sat May 24 10:11:06 BRT 2014: java.lang.RuntimeException: Resource not found: ./Game/img/bg.jpg
+  org.unbiquitous.uImpala.engine.core.Game.init(Game.java:200)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:107)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+
+Sat May 24 10:31:30 BRT 2014: java.lang.RuntimeException: Resource not found: ./Game/img/bg.jpg
+  org.unbiquitous.uImpala.engine.core.Game.init(Game.java:200)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:107)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+
+Sat May 24 10:32:28 BRT 2014: java.lang.RuntimeException: Resource not found: ./Game/img/bg.jpg
+  org.unbiquitous.uImpala.engine.core.Game.init(Game.java:200)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:107)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+
+Sat May 24 10:33:20 BRT 2014: java.lang.RuntimeException: Resource not found: ./img/grid.jpg
+  org.unbiquitous.uImpala.engine.core.Game.init(Game.java:200)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:107)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+
+Sat May 24 10:57:10 BRT 2014: Unresolved compilation problems: 
+	bg cannot be resolved
+	grid cannot be resolved
+
+  game.BattleScene.render(BattleScene.java:34)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:127)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+
+Sat May 24 11:46:57 BRT 2014: no lwjgl in java.library.path
+  java.lang.ClassLoader.loadLibrary(Unknown Source)
+  java.lang.Runtime.loadLibrary0(Unknown Source)
+  java.lang.System.loadLibrary(Unknown Source)
+  org.lwjgl.Sys$1.run(Sys.java:73)
+  java.security.AccessController.doPrivileged(Native Method)
+  org.lwjgl.Sys.doLoadLibrary(Sys.java:66)
+  org.lwjgl.Sys.loadLibrary(Sys.java:95)
+  org.lwjgl.Sys.<clinit>(Sys.java:112)
+  org.unbiquitous.uImpala.jse.impl.time.Time.getTime(Time.java:7)
+  org.unbiquitous.uImpala.engine.time.Time.get(Time.java:14)
+  org.unbiquitous.uImpala.engine.time.DeltaTime.<init>(DeltaTime.java:57)
+  org.unbiquitous.uImpala.engine.core.Game.init(Game.java:178)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:112)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+
+Sat May 24 11:47:15 BRT 2014: no lwjgl in java.library.path
+  java.lang.ClassLoader.loadLibrary(Unknown Source)
+  java.lang.Runtime.loadLibrary0(Unknown Source)
+  java.lang.System.loadLibrary(Unknown Source)
+  org.lwjgl.Sys$1.run(Sys.java:73)
+  java.security.AccessController.doPrivileged(Native Method)
+  org.lwjgl.Sys.doLoadLibrary(Sys.java:66)
+  org.lwjgl.Sys.loadLibrary(Sys.java:95)
+  org.lwjgl.Sys.<clinit>(Sys.java:112)
+  org.unbiquitous.uImpala.jse.impl.time.Time.getTime(Time.java:7)
+  org.unbiquitous.uImpala.engine.time.Time.get(Time.java:14)
+  org.unbiquitous.uImpala.engine.time.DeltaTime.<init>(DeltaTime.java:57)
+  org.unbiquitous.uImpala.engine.core.Game.init(Game.java:178)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:112)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+
+Sun May 25 10:08:28 BRT 2014: java.awt.color.CMMException: Invalid image format
+  org.unbiquitous.uImpala.engine.core.Game.init(Game.java:201)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:112)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+
+Sun May 25 10:09:31 BRT 2014: java.awt.color.CMMException: Invalid image format
+  org.unbiquitous.uImpala.engine.core.Game.init(Game.java:201)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:112)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+
+Sun May 25 10:10:54 BRT 2014: java.awt.color.CMMException: Invalid image format
+  org.unbiquitous.uImpala.engine.core.Game.init(Game.java:201)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:112)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+
+Sun May 25 10:11:07 BRT 2014: java.awt.color.CMMException: Invalid image format
+  org.unbiquitous.uImpala.engine.core.Game.init(Game.java:201)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:112)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+
+Mon May 26 00:26:28 BRT 2014: java.lang.reflect.InvocationTargetException
+  org.unbiquitous.uImpala.util.observer.Observation.notifyEvent(Observation.java:60)
+  org.unbiquitous.uImpala.util.observer.Observations$EventOccurrence.notifyObservers(Observations.java:167)
+  org.unbiquitous.uImpala.util.observer.Observations$EventOccurrence.access$1(Observations.java:165)
+  org.unbiquitous.uImpala.util.observer.Observations.broadcast(Observations.java:94)
+  org.unbiquitous.uImpala.engine.io.MouseSource.update(MouseSource.java:67)
+  org.unbiquitous.uImpala.engine.io.MouseManager.update(MouseManager.java:21)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:118)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+
+Mon May 26 00:28:41 BRT 2014: java.lang.reflect.InvocationTargetException
+  org.unbiquitous.uImpala.util.observer.Observation.notifyEvent(Observation.java:60)
+  org.unbiquitous.uImpala.util.observer.Observations$EventOccurrence.notifyObservers(Observations.java:167)
+  org.unbiquitous.uImpala.util.observer.Observations$EventOccurrence.access$1(Observations.java:165)
+  org.unbiquitous.uImpala.util.observer.Observations.broadcast(Observations.java:94)
+  org.unbiquitous.uImpala.engine.io.MouseSource.update(MouseSource.java:67)
+  org.unbiquitous.uImpala.engine.io.MouseManager.update(MouseManager.java:21)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:118)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+
+Mon May 26 00:30:53 BRT 2014: java.lang.reflect.InvocationTargetException
+  org.unbiquitous.uImpala.util.observer.Observation.notifyEvent(Observation.java:60)
+  org.unbiquitous.uImpala.util.observer.Observations$EventOccurrence.notifyObservers(Observations.java:167)
+  org.unbiquitous.uImpala.util.observer.Observations$EventOccurrence.access$1(Observations.java:165)
+  org.unbiquitous.uImpala.util.observer.Observations.broadcast(Observations.java:94)
+  org.unbiquitous.uImpala.engine.io.MouseSource.update(MouseSource.java:67)
+  org.unbiquitous.uImpala.engine.io.MouseManager.update(MouseManager.java:21)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:118)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+
+Mon May 26 00:34:55 BRT 2014: java.lang.reflect.InvocationTargetException
+  org.unbiquitous.uImpala.util.observer.Observation.notifyEvent(Observation.java:60)
+  org.unbiquitous.uImpala.util.observer.Observations$EventOccurrence.notifyObservers(Observations.java:167)
+  org.unbiquitous.uImpala.util.observer.Observations$EventOccurrence.access$1(Observations.java:165)
+  org.unbiquitous.uImpala.util.observer.Observations.broadcast(Observations.java:94)
+  org.unbiquitous.uImpala.engine.io.MouseSource.update(MouseSource.java:67)
+  org.unbiquitous.uImpala.engine.io.MouseManager.update(MouseManager.java:21)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:118)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+
+Fri May 30 13:05:57 BRT 2014: java.lang.InstantiationException: game.BattleScene
+  org.unbiquitous.uImpala.engine.core.Game.init(Game.java:201)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:112)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+
+Tue Jun 03 22:12:32 BRT 2014: java.lang.StringIndexOutOfBoundsException: String index out of range: 0
+  org.unbiquitous.uImpala.engine.core.Game.init(Game.java:201)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:112)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+
+Thu Jun 05 19:18:59 BRT 2014: java.lang.NullPointerException
+  org.unbiquitous.uImpala.engine.core.Game.init(Game.java:201)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:112)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+
+Thu Jun 05 19:19:30 BRT 2014: java.lang.NullPointerException
+  org.unbiquitous.uImpala.engine.core.Game.init(Game.java:201)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:112)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+
+Sat Jun 07 21:22:16 BRT 2014: java.util.NoSuchElementException
+  org.unbiquitous.uImpala.engine.core.Game.init(Game.java:201)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:112)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+
+Sat Jun 07 22:22:22 BRT 2014: Invalid path for asset: Test Enemy
+  org.unbiquitous.uImpala.jse.impl.asset.AssetManager.getFormat(AssetManager.java:89)
+  org.unbiquitous.uImpala.jse.impl.asset.AssetManager.getTexture(AssetManager.java:35)
+  org.unbiquitous.uImpala.jse.impl.asset.AssetManager.newSprite(AssetManager.java:26)
+  org.unbiquitous.uImpala.jse.impl.asset.AssetManager.newSprite(AssetManager.java:1)
+  game.Entity.<init>(Entity.java:55)
+  game.BattleScene.<init>(BattleScene.java:51)
+  game.WorldMapScene.update(WorldMapScene.java:34)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:124)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+
+Sat Jun 07 22:37:33 BRT 2014: Invalid path for asset: Test Enemy
+  org.unbiquitous.uImpala.jse.impl.asset.AssetManager.getFormat(AssetManager.java:89)
+  org.unbiquitous.uImpala.jse.impl.asset.AssetManager.getTexture(AssetManager.java:35)
+  org.unbiquitous.uImpala.jse.impl.asset.AssetManager.newSprite(AssetManager.java:26)
+  org.unbiquitous.uImpala.jse.impl.asset.AssetManager.newSprite(AssetManager.java:1)
+  game.Entity.<init>(Entity.java:55)
+  game.BattleScene.<init>(BattleScene.java:51)
+  game.WorldMapScene.update(WorldMapScene.java:34)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:124)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+
+Sat Jun 07 22:38:52 BRT 2014: Invalid path for asset: Test Enemy
+  org.unbiquitous.uImpala.jse.impl.asset.AssetManager.getFormat(AssetManager.java:89)
+  org.unbiquitous.uImpala.jse.impl.asset.AssetManager.getTexture(AssetManager.java:35)
+  org.unbiquitous.uImpala.jse.impl.asset.AssetManager.newSprite(AssetManager.java:26)
+  org.unbiquitous.uImpala.jse.impl.asset.AssetManager.newSprite(AssetManager.java:1)
+  game.Entity.<init>(Entity.java:56)
+  game.BattleScene.<init>(BattleScene.java:51)
+  game.WorldMapScene.update(WorldMapScene.java:34)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:124)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+
+Sun Jun 08 03:31:07 BRT 2014: java.lang.NumberFormatException: For input string: "ID"
+  org.unbiquitous.uImpala.engine.core.Game.init(Game.java:201)
+  org.unbiquitous.uImpala.engine.core.Game.start(Game.java:112)
+  org.unbiquitous.uos.core.applicationManager.ApplicationManager$1.run(ApplicationManager.java:83)
+  java.lang.Thread.run(Unknown Source)
+

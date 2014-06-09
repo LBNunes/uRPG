@@ -1,3 +1,30 @@
+/////////////////////////////////////////////////////////////////////////
+//
+// Copyright (c) Luísa Bontempo Nunes
+//     Created on 2014-06-05 ymd
+//
+// X11 Licensed Code
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+/////////////////////////////////////////////////////////////////////////
+
 package game;
 
 import org.unbiquitous.uImpala.engine.asset.AssetManager;
@@ -9,6 +36,7 @@ import org.unbiquitous.uImpala.engine.core.GameRenderers;
 import org.unbiquitous.uImpala.engine.io.MouseEvent;
 import org.unbiquitous.uImpala.engine.io.MouseSource;
 import org.unbiquitous.uImpala.engine.io.Screen;
+import org.unbiquitous.uImpala.util.Color;
 import org.unbiquitous.uImpala.util.Corner;
 import org.unbiquitous.uImpala.util.observer.Event;
 import org.unbiquitous.uImpala.util.observer.Observation;
@@ -18,24 +46,24 @@ public class Button extends GameObject {
     private Screen      screen;
     private MouseSource mouse;
     private Sprite      look;
+    private Color       color;
     private Text        text;
     private Point       pos;
-    private Point       textPos;
     private Rect        box;
     private boolean     pressed;
 
-    public Button(AssetManager assets, String buttonLook, String buttonText, int x, int y) {
+    public Button(AssetManager assets, String buttonLook, String buttonText, Color textColor, int x, int y) {
         screen = GameComponents.get(Screen.class);
         mouse = screen.getMouse();
         mouse.connect(MouseSource.EVENT_BUTTON_DOWN, new Observation(this, "OnButtonDown"));
 
+        color = textColor;
         look = assets.newSprite(buttonLook);
         text = assets.newText(Config.BUTTON_FONT, buttonText);
-        pos = new Point(x + look.getWidth() / 2, y + look.getHeight() / 2);
-        textPos = new Point(x + look.getWidth() / 2, y + look.getHeight() / 2);
+        pos = new Point(x, y);
         pressed = false;
 
-        box = new Rect(x, y, look.getWidth(), look.getHeight());
+        box = new Rect(x - look.getWidth() / 2, y - look.getHeight() / 2, look.getWidth(), look.getHeight());
     }
 
     @Override
@@ -45,8 +73,10 @@ public class Button extends GameObject {
 
     @Override
     protected void render(GameRenderers renderers) {
+        if (!visible)
+            return;
         look.render(screen, pos.x, pos.y, Corner.CENTER);
-        text.render(screen, textPos.x, textPos.y, Corner.CENTER);
+        text.render(screen, pos.x, pos.y, Corner.CENTER, 1.0f, 0.0f, 1.0f, 1.0f, color);
     }
 
     @Override
@@ -63,12 +93,13 @@ public class Button extends GameObject {
 
     public void Hide() {
         visible = false;
-        frozen = false;
+        frozen = true;
+        Reset();
     }
 
     public void Show() {
         visible = true;
-        frozen = true;
+        frozen = false;
     }
 
     public boolean WasPressed() {
@@ -81,7 +112,8 @@ public class Button extends GameObject {
 
     public void OnButtonDown(Event event, Subject subject) {
         MouseEvent e = (MouseEvent) event;
-        if (box.IsInside(e.getX(), e.getY())) {
+
+        if (box.IsInside(e.getX(), e.getY()) && !frozen) {
             pressed = true;
         }
     }

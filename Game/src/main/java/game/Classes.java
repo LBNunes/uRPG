@@ -1,3 +1,30 @@
+/////////////////////////////////////////////////////////////////////////
+//
+// Copyright (c) Luísa Bontempo Nunes
+//     Created on 2014-05-29 ymd
+//
+// X11 Licensed Code
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+/////////////////////////////////////////////////////////////////////////
+
 package game;
 
 import game.Item.ItemSlot;
@@ -15,10 +42,10 @@ public class Classes {
         WARRIOR, PALADIN, BERSERKER, MAGE, ARCHMAGE, CLERIC, ROGUE, HUNTER, NINJA, NONE
     }
 
-    private static HashMap<ClassID, Stats> baseStatTable = new HashMap<ClassID, Stats>();
+    private static HashMap<ClassID, ClassData> table = new HashMap<ClassID, ClassData>();
 
     public static Stats GetBaseStats(ClassID id) {
-        return baseStatTable.get(id);
+        return table.get(id).stats;
     }
 
     public static String GetClassName(ClassID id) {
@@ -47,6 +74,14 @@ public class Classes {
         return null;
     }
 
+    public static String GetClassSprite(ClassID id) {
+        return table.get(id).sprite;
+    }
+
+    public static int GetMoveRange(ClassID id) {
+        return table.get(id).moveRange;
+    }
+
     public static boolean CanEquip(ClassID charClass, Item item) {
 
         if (item.GetSlot() == ItemSlot.NONE)
@@ -55,24 +90,24 @@ public class Classes {
         switch (item.GetClassRequirement()) {
             case WARRIOR:
                 return charClass == ClassID.WARRIOR ||
-                        charClass == ClassID.PALADIN ||
-                        charClass == ClassID.BERSERKER;
+                       charClass == ClassID.PALADIN ||
+                       charClass == ClassID.BERSERKER;
             case PALADIN:
                 return charClass == ClassID.PALADIN;
             case BERSERKER:
                 return charClass == ClassID.BERSERKER;
             case MAGE:
                 return charClass == ClassID.MAGE ||
-                        charClass == ClassID.ARCHMAGE ||
-                        charClass == ClassID.CLERIC;
+                       charClass == ClassID.ARCHMAGE ||
+                       charClass == ClassID.CLERIC;
             case ARCHMAGE:
                 return charClass == ClassID.ARCHMAGE;
             case CLERIC:
                 return charClass == ClassID.CLERIC;
             case ROGUE:
                 return charClass == ClassID.ROGUE ||
-                        charClass == ClassID.HUNTER ||
-                        charClass == ClassID.NINJA;
+                       charClass == ClassID.HUNTER ||
+                       charClass == ClassID.NINJA;
             case HUNTER:
                 return charClass == ClassID.HUNTER;
             case NINJA:
@@ -84,20 +119,8 @@ public class Classes {
     }
 
     public boolean IsCritical(Entity attacker) {
-        double critFactor;
-        switch (attacker.charClass) {
-            case NINJA:
-                critFactor = 0.70;
-                break;
-            case ROGUE:
-            case HUNTER:
-            case BERSERKER:
-                critFactor = 0.80;
-                break;
-            default:
-                critFactor = 0.90;
-                break;
-        }
+
+        double critFactor = 1.0f - table.get(attacker.classID).critRate;
         return critFactor < Math.random();
     }
 
@@ -115,11 +138,13 @@ public class Classes {
 
         FileInputStream f;
         try {
-            f = new FileInputStream(Config.BASE_STAT_LIST);
+            f = new FileInputStream(Config.CLASS_DATA);
             Scanner s = new Scanner(f);
             String line;
 
             ClassID _class;
+            String _sprite;
+            int _move;
             int _HP;
             int _MP;
             int _atk;
@@ -127,6 +152,7 @@ public class Classes {
             int _mag;
             int _res;
             int _spd;
+            double _critRate;
 
             while (s.hasNextLine()) {
                 line = s.nextLine();
@@ -138,6 +164,8 @@ public class Classes {
                 StringTokenizer tokenizer = new StringTokenizer(line, " ");
 
                 _class = ClassID.valueOf(tokenizer.nextToken());
+                _sprite = tokenizer.nextToken();
+                _move = Integer.parseInt(tokenizer.nextToken());
                 _HP = Integer.parseInt(tokenizer.nextToken());
                 _MP = Integer.parseInt(tokenizer.nextToken());
                 _atk = Integer.parseInt(tokenizer.nextToken());
@@ -145,19 +173,36 @@ public class Classes {
                 _mag = Integer.parseInt(tokenizer.nextToken());
                 _res = Integer.parseInt(tokenizer.nextToken());
                 _spd = Integer.parseInt(tokenizer.nextToken());
+                _critRate = Double.parseDouble(tokenizer.nextToken());
 
-                baseStatTable.put(_class, new Stats(_HP, _MP, _atk, _def, _mag, _res, _spd));
+                table.put(_class, new ClassData(_sprite, _HP, _MP, _atk, _def, _mag, _res, _spd, _move, _critRate));
             }
 
             s.close();
             f.close();
         }
         catch (FileNotFoundException e) {
-            System.out.println("FATAL ERROR: File '" + Config.BASE_STAT_LIST + "' was not found!");
+            System.out.println("FATAL ERROR: File '" + Config.CLASS_DATA + "' was not found!");
             System.exit(1);
         }
         catch (IOException e) {
-            System.out.println("WARNING: File '" + Config.BASE_STAT_LIST + "' may have been read incorrectly.");
+            System.out.println("WARNING: File '" + Config.CLASS_DATA + "' may have been read incorrectly.");
+        }
+    }
+
+    private static class ClassData {
+        public String sprite;
+        public Stats  stats;
+        public int    moveRange;
+        public double critRate;
+
+        public ClassData(String _sprite, int _HP, int _MP, int _atk, int _def, int _mag, int _res, int _spd,
+                         int _moveRange, double _critRate) {
+
+            sprite = _sprite;
+            stats = new Stats(_HP, _MP, _atk, _def, _mag, _res, _spd);
+            moveRange = _moveRange;
+            critRate = _critRate;
         }
     }
 }

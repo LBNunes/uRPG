@@ -1,6 +1,35 @@
+/////////////////////////////////////////////////////////////////////////
+//
+// Copyright (c) Luísa Bontempo Nunes
+//     Created on 2014-05-25 ymd
+//
+// X11 Licensed Code
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+/////////////////////////////////////////////////////////////////////////
+
 package game;
 
 import game.WorldMapScene.WorldArea;
+
+import java.util.ArrayList;
 
 import org.unbiquitous.uImpala.engine.asset.AssetManager;
 import org.unbiquitous.uImpala.engine.asset.Sprite;
@@ -61,6 +90,10 @@ public class Grid extends GameObject {
         screen = GameComponents.get(Screen.class);
 
         System.out.println("Created Grid.");
+    }
+
+    public void ClearColors() {
+        ClearColors(HexColors.CLEAR);
     }
 
     public void ClearColors(HexColors fill) {
@@ -179,8 +212,6 @@ public class Grid extends GameObject {
         if (!ValidHexPosition(x, y) && area != GridArea.ALL)
             return;
 
-        System.out.println("Coloring hex " + x + ", " + y);
-
         switch (area) {
         // Color the hex at x, y - Complement is unused
             case SINGLE_HEX:
@@ -265,6 +296,15 @@ public class Grid extends GameObject {
             case ALL:
                 ClearColors(fill);
                 break;
+        }
+    }
+
+    public void ColorHexes(ArrayList<Point> hexes, HexColors fill, boolean clear) {
+        if (clear) {
+            ClearColors(HexColors.CLEAR);
+        }
+        for (Point p : hexes) {
+            ColorArea(p.x, p.y, GridArea.SINGLE_HEX, fill, 0);
         }
     }
 

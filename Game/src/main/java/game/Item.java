@@ -1,3 +1,30 @@
+/////////////////////////////////////////////////////////////////////////
+//
+// Copyright (c) Luísa Bontempo Nunes
+//     Created on 2014-05-29 ymd
+//
+// X11 Licensed Code
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+/////////////////////////////////////////////////////////////////////////
+
 package game;
 
 import game.Classes.ClassID;
@@ -22,6 +49,7 @@ public class Item {
     private String                              name;
     private ItemSlot                            slot;
     private ClassID                             classReq;
+    private boolean                             useable;
     private int                                 range;
     private int                                 bonusHP;
     private int                                 bonusMP;
@@ -49,6 +77,10 @@ public class Item {
 
     public ClassID GetClassRequirement() {
         return classReq;
+    }
+
+    public boolean IsUseable() {
+        return useable;
     }
 
     public int GetRange() {
@@ -83,13 +115,14 @@ public class Item {
         return bonusSpd;
     }
 
-    protected Item(int id, String name, ItemSlot slot, ClassID req, int range, int hp, int mp, int atk, int def,
-            int mag, int res, int spd) {
+    protected Item(int id, String name, ItemSlot slot, ClassID req, boolean useable, int range,
+                   int hp, int mp, int atk, int def, int mag, int res, int spd) {
 
         this.itemID = id;
         this.name = name;
         this.slot = slot;
         this.classReq = req;
+        this.useable = useable;
         this.range = range;
         this.bonusHP = hp;
         this.bonusMP = mp;
@@ -104,7 +137,7 @@ public class Item {
 
     public static void InitTable() {
         try {
-            FileInputStream f = new FileInputStream(Config.ITEM_LIST);
+            FileInputStream f = new FileInputStream(Config.ITEM_DATA);
             Scanner s = new Scanner(f);
             String line;
 
@@ -112,6 +145,7 @@ public class Item {
             String _name;
             ItemSlot _slot;
             ClassID _classReq;
+            boolean _useable;
             int _range;
             int _HP;
             int _MP;
@@ -134,6 +168,7 @@ public class Item {
                 _name = tokenizer.nextToken().replace("_", " ");
                 _slot = ItemSlot.valueOf(tokenizer.nextToken());
                 _classReq = ClassID.valueOf(tokenizer.nextToken());
+                _useable = Integer.parseInt(tokenizer.nextToken()) != 0;
                 _range = Integer.parseInt(tokenizer.nextToken());
                 _HP = Integer.parseInt(tokenizer.nextToken());
                 _MP = Integer.parseInt(tokenizer.nextToken());
@@ -143,18 +178,18 @@ public class Item {
                 _res = Integer.parseInt(tokenizer.nextToken());
                 _spd = Integer.parseInt(tokenizer.nextToken());
 
-                new Item(_id, _name, _slot, _classReq, _range, _HP, _MP, _atk, _def, _mag, _res, _spd);
+                new Item(_id, _name, _slot, _classReq, _useable, _range, _HP, _MP, _atk, _def, _mag, _res, _spd);
             }
 
             s.close();
             f.close();
         }
         catch (FileNotFoundException e) {
-            System.out.println("FATAL ERROR: File '" + Config.ITEM_LIST + "' was not found!");
+            System.out.println("FATAL ERROR: File '" + Config.ITEM_DATA + "' was not found!");
             System.exit(1);
         }
         catch (IOException e) {
-            System.out.println("WARNING: File '" + Config.ITEM_LIST + "' may have been read incorrectly.");
+            System.out.println("WARNING: File '" + Config.ITEM_DATA + "' may have been read incorrectly.");
         }
     }
 
@@ -165,7 +200,8 @@ public class Item {
             System.out.println(item.name + " (" + item.itemID + ")");
             System.out.println(item.slot + " for " + item.classReq);
             System.out.println(item.bonusHP + "HP " + item.bonusMP + "MP " + item.bonusAtk + "Atk " +
-                    item.bonusDef + "Def " + item.bonusMag + "Mag " + item.bonusRes + "Res " + item.bonusSpd + "Spd");
+                               item.bonusDef + "Def " + item.bonusMag + "Mag " + item.bonusRes + "Res " +
+                               item.bonusSpd + "Spd");
         }
     }
 }

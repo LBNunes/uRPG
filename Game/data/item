@@ -1,19 +1,22 @@
-# Values are ID - NAME - SLOT - CLASS REQ. - RANGE - HP - MP - ATK - DEF - MAG - RES - SPD
-000 (nothing)           NONE     NONE       1   0   0   0   0   0   0   0
+# ID  NAME              SLOT     CLASS    USE RANGE HP  MP ATK DEF MAG RES SPD
+000 (nothing)           NONE     NONE       0   1   0   0   0   0   0   0   0
 # Weapons
-001 Wooden_Sword        WEAPON   WARRIOR    1   0   0   3   1   0   0   -1
-021 Wooden_Tomahawk     WEAPON   WARRIOR    1   0   0   5  -1   0   0   0
-041 Wooden_Rod          WEAPON   MAGE       1   0   10  1   0   5   0   0
-061 Wooden_Staff        WEAPON   MAGE       1   5   5   0   0   3   3   0
-081 Wooden_Bow          WEAPON   ROGUE      2   0   0   2   0   0   0   0
-101 Wooden_Knife        WEAPON   ROGUE      1   0   0   5  -1   0   0   1
+001 Wooden_Sword        WEAPON   WARRIOR    0   1   0   0   3   1   0   0   -1
+051 Wooden_Tomahawk     WEAPON   WARRIOR    0   1   0   0   5  -1   0   0   0
+101 Wooden_Rod          WEAPON   MAGE       0   1   0   10  1   0   5   0   0
+151 Wooden_Staff        WEAPON   MAGE       0   1   5   5   0   0   3   3   0
+201 Wooden_Bow          WEAPON   ROGUE      0   2   0   0   2   0   0   0   0
+251 Wooden_Knife        WEAPON   ROGUE      0   1   0   0   5  -1   0   0   1
 
 # Armor
-121 Cloth_Shirt         ARMOR    NONE       0   5   0   0   3  0   2   0
-122 Leather_Shirt       ARMOR    NONE       0   9   0   0   4  0   3   0
+301 Cloth_Shirt         ARMOR    NONE       0   0   5   0   0   3  0   2   0
+302 Leather_Shirt       ARMOR    NONE       0   0   9   0   0   4  0   3   0
 
 # Accessories
-201 Boots               EXTRA    NONE       0   0   0   0   0   0   0   1
+401 Boots               EXTRA    NONE       0   0   0   0   0   0   0   0   1
+
+# Usable
+501 Potion              NONE     NONE       1   30  0   0   0   0   0   0   0
 
 # Crafting Components
-251 Wood                NONE     NONE       0   0   0   0   0   0   0   0
+601 Wood                NONE     NONE       0   0   0   0   0   0   0   0   0
