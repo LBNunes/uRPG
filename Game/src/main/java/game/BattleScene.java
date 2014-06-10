@@ -30,6 +30,7 @@ package game;
 import game.Classes.ClassID;
 import game.Grid.GridArea;
 import game.Grid.HexColors;
+import game.Item.ItemSlot;
 import game.WorldMapScene.WorldArea;
 
 import java.util.ArrayList;
@@ -38,6 +39,8 @@ import org.unbiquitous.uImpala.engine.core.Game;
 import org.unbiquitous.uImpala.engine.core.GameComponents;
 import org.unbiquitous.uImpala.engine.core.GameObjectTreeScene;
 import org.unbiquitous.uImpala.engine.core.GameRenderers;
+import org.unbiquitous.uImpala.engine.io.KeyboardEvent;
+import org.unbiquitous.uImpala.engine.io.KeyboardSource;
 import org.unbiquitous.uImpala.engine.io.MouseEvent;
 import org.unbiquitous.uImpala.engine.io.MouseSource;
 import org.unbiquitous.uImpala.engine.io.Screen;
@@ -51,15 +54,13 @@ public class BattleScene extends GameObjectTreeScene {
 
     private enum TurnStage {
         BATTLE_START, PLAY_ANIMATIONS, FIND_NEXT_PLAYER, CHOOSE_ACTION,
-        ACTION_ATTACK, ATTACK_TARGET, INFLICT_DAMAGE, ACTION_MOVE, MOVE_TARGET,
-        ACTION_ABILITY, ABILITY_PICK, ABILITY_TARGET,
-        ACTION_ITEM, ITEM_PICK, ITEM_TARGET,
+        ACTION_ATTACK, ACTION_MOVE, ACTION_ABILITY, ABILITY_PICK, ITEM_PICK, ACTION_ITEM,
         CHECK_END, VICTORY, DEFEAT, BATTLE_END
     }
 
     private Screen            screen;
     private MouseSource       mouse;
-
+    private KeyboardSource    keyboard;
     private PlayerData        playerData;
     private ArrayList<Entity> units;
     private AnimationQueue    animationQueue;
@@ -77,6 +78,7 @@ public class BattleScene extends GameObjectTreeScene {
     private Button            abilityButton;
     private Button            itemButton;
     private Button            endButton;
+    private boolean           escKeyPressed;
 
     public BattleScene(PlayerData playerData, WorldArea area) {
 
@@ -87,6 +89,11 @@ public class BattleScene extends GameObjectTreeScene {
 
         mouse = screen.getMouse();
         mouse.connect(MouseSource.EVENT_BUTTON_DOWN, new Observation(this, "OnButtonDown"));
+        keyboard = screen.getKeyboard();
+        keyboard.connect(KeyboardSource.EVENT_KEY_DOWN, new Observation(this, "OnKeyDown"));
+        keyboard.connect(KeyboardSource.EVENT_KEY_UP, new Observation(this, "OnKeyUp"));
+
+        escKeyPressed = false;
 
         // TODO: Unpack player data
         // TODO: Create enemies
@@ -154,15 +161,6 @@ public class BattleScene extends GameObjectTreeScene {
         TextLog.instance.Clear();
     }
 
-    @SuppressWarnings("unused")
-    private void OnButtonDown(Event event, Subject subject) {
-        MouseEvent e = (MouseEvent) event;
-        selectedHex = grid.FindHexByPixel(e.getX(), e.getY());
-        if (!grid.ValidHexPosition(selectedHex.x, selectedHex.y)) {
-            selectedHex = null;
-        }
-    }
-
     protected void update() {
         if (screen.isCloseRequested()) {
             GameComponents.get(Game.class).quit();
@@ -209,27 +207,22 @@ public class BattleScene extends GameObjectTreeScene {
                 Stage_ChooseAction();
                 break;
             case ACTION_ATTACK:
-                break;
-            case ATTACK_TARGET:
-                break;
-            case INFLICT_DAMAGE:
+                Stage_ActionAttack();
                 break;
             case ACTION_MOVE:
                 Stage_ActionMove();
                 break;
-            case MOVE_TARGET:
+            case ABILITY_PICK:
+                Stage_AbilityPick();
                 break;
             case ACTION_ABILITY:
-                break;
-            case ABILITY_PICK:
-                break;
-            case ABILITY_TARGET:
-                break;
-            case ACTION_ITEM:
+                Stage_ActionAbility();
                 break;
             case ITEM_PICK:
+                Stage_ItemPick();
                 break;
-            case ITEM_TARGET:
+            case ACTION_ITEM:
+                Stage_ActionItem();
                 break;
             case CHECK_END:
                 Stage_CheckEnd();
@@ -269,14 +262,16 @@ public class BattleScene extends GameObjectTreeScene {
         Entity turnTaker = null;
         while (turnTaker == null) {
             for (Entity e : units) {
-                if (e.turnTimer > largestTimer) {
+                if (e.turnTimer > largestTimer && e.currentHP > 0) {
                     largestTimer = e.turnTimer;
                     turnTaker = e;
                 }
             }
             if (turnTaker == null) {
                 for (Entity e : units) {
-                    e.turnTimer += e.stats.spd;
+                    if (e.currentHP > 0) {
+                        e.turnTimer += e.stats.spd;
+                    }
                 }
             }
         }
@@ -290,7 +285,22 @@ public class BattleScene extends GameObjectTreeScene {
     }
 
     private void Stage_ChooseAction() {
-        if (moveButton.WasPressed()) {
+
+        if (endButton.WasPressed() || (hasActed && hasMoved)) {
+            HideActionButtons();
+            if (hasActed && hasMoved) {
+                currentEntity.turnTimer = 0;
+            }
+            else if (hasActed || hasMoved) {
+                currentEntity.turnTimer = 20;
+            }
+            else {
+                currentEntity.turnTimer = 40;
+            }
+            currentStage = TurnStage.FIND_NEXT_PLAYER;
+        }
+
+        else if (moveButton.WasPressed()) {
             if (hasMoved) {
                 TextLog.instance.Print(currentEntity.name + " has already moved on this turn!", Color.white);
                 moveButton.Reset();
@@ -305,64 +315,117 @@ public class BattleScene extends GameObjectTreeScene {
                 currentStage = TurnStage.ACTION_MOVE;
             }
         }
-        if (attackButton.WasPressed()) {
+        else if (attackButton.WasPressed()) {
             if (hasActed) {
                 TextLog.instance.Print(currentEntity.name + " has already acted on this turn!", Color.white);
                 attackButton.Reset();
             }
             else {
-                currentStage = TurnStage.ACTION_ATTACK;
+                hexList.clear();
+                ListHexes(currentEntity.pos.x, currentEntity.pos.y, GridArea.CIRCLE,
+                          currentEntity.equipment.Get(ItemSlot.WEAPON).GetRange());
                 HideActionButtons();
+                grid.ColorHexes(hexList, HexColors.RED, true);
+                grid.ColorArea(currentEntity.pos.x, currentEntity.pos.y, GridArea.SINGLE_HEX, HexColors.BLUE, 0);
+                selectedHex = null;
+                currentStage = TurnStage.ACTION_ATTACK;
             }
         }
-        if (abilityButton.WasPressed()) {
+        else if (abilityButton.WasPressed()) {
             if (hasActed) {
                 TextLog.instance.Print(currentEntity.name + " has already acted on this turn!", Color.white);
                 abilityButton.Reset();
             }
             else {
-                currentStage = TurnStage.ACTION_ABILITY;
+                currentStage = TurnStage.ABILITY_PICK;
                 HideActionButtons();
             }
         }
-        if (itemButton.WasPressed()) {
+        else if (itemButton.WasPressed()) {
             if (hasActed) {
                 TextLog.instance.Print(currentEntity.name + " has already acted on this turn!", Color.white);
                 itemButton.Reset();
             }
             else {
-                currentStage = TurnStage.ACTION_ITEM;
+                currentStage = TurnStage.ITEM_PICK;
                 HideActionButtons();
             }
-        }
-        if (endButton.WasPressed()) {
-            HideActionButtons();
-            if (hasActed && hasMoved) {
-                currentEntity.turnTimer = 0;
-            }
-            else if (hasActed || hasMoved) {
-                currentEntity.turnTimer = 30;
-            }
-            else {
-                currentEntity.turnTimer = 60;
-            }
-            currentStage = TurnStage.FIND_NEXT_PLAYER;
         }
     }
 
     private void Stage_ActionMove() {
         if (selectedHex != null) {
             if (AlreadyListed(selectedHex.x, selectedHex.y)) {
-                if (!HexOccupied(selectedHex.x, selectedHex.y)) {
+                if (HexOccupied(selectedHex.x, selectedHex.y) == null) {
                     currentEntity.Move(selectedHex.x, selectedHex.y);
                     hasMoved = true;
-                    ShowActionButtons();
                     grid.ClearColors();
-                    grid.ColorArea(currentEntity.pos.x, currentEntity.pos.y, GridArea.SINGLE_HEX, HexColors.BLUE, 0);
+                    if (!(hasMoved && hasActed)) {
+                        ShowActionButtons();
+                        grid.ColorArea(currentEntity.pos.x, currentEntity.pos.y, GridArea.SINGLE_HEX, HexColors.BLUE, 0);
+                    }
                     currentStage = TurnStage.CHOOSE_ACTION;
                 }
             }
         }
+        else if (escKeyPressed) {
+            ShowActionButtons();
+            grid.ClearColors();
+            grid.ColorArea(currentEntity.pos.x, currentEntity.pos.y, GridArea.SINGLE_HEX, HexColors.BLUE, 0);
+            currentStage = TurnStage.CHOOSE_ACTION;
+        }
+    }
+
+    private void Stage_ActionAttack() {
+        if (selectedHex != null) {
+            if (AlreadyListed(selectedHex.x, selectedHex.y)) {
+                Entity target = HexOccupied(selectedHex.x, selectedHex.y);
+                if (target != null && target.playerUnit != currentEntity.playerUnit) {
+                    int damage = Classes.GetPhysicalFactor(currentEntity, target);
+                    Point damagePos = grid.FindHexPosition(target.pos.x, target.pos.y);
+                    damagePos.y -= Grid.hexRadius / 2;
+                    if (Classes.IsCritical(currentEntity)) {
+                        damage *= Config.CRITICAL_FACTOR;
+                        animationQueue.Push(damage, true, damage >= 0 ? Color.red : Color.green, damagePos);
+                        PrintDamage(damage, true, currentEntity, target);
+                    }
+                    else {
+                        animationQueue.Push(damage, false, damage >= 0 ? Color.red : Color.green, damagePos);
+                        PrintDamage(damage, false, currentEntity, target);
+                    }
+                    hasActed = true;
+                    grid.ClearColors();
+                    if (!(hasMoved && hasActed)) {
+                        ShowActionButtons();
+                        grid.ColorArea(currentEntity.pos.x, currentEntity.pos.y, GridArea.SINGLE_HEX, HexColors.BLUE, 0);
+                    }
+                    currentStage = TurnStage.PLAY_ANIMATIONS;
+                    nextStage = TurnStage.CHECK_END;
+                }
+            }
+        }
+        else if (escKeyPressed) {
+            ShowActionButtons();
+            grid.ClearColors();
+            grid.ColorArea(currentEntity.pos.x, currentEntity.pos.y, GridArea.SINGLE_HEX, HexColors.BLUE, 0);
+            currentStage = TurnStage.CHOOSE_ACTION;
+        }
+    }
+
+    private void Stage_AbilityPick() {
+        currentStage = TurnStage.CHOOSE_ACTION;
+    }
+
+    private void Stage_ActionAbility() {
+
+    }
+
+    private void Stage_ItemPick() {
+        currentStage = TurnStage.CHOOSE_ACTION;
+    }
+
+    private void Stage_ActionItem() {
+
     }
 
     private void Stage_CheckEnd() {
@@ -373,7 +436,7 @@ public class BattleScene extends GameObjectTreeScene {
             currentStage = TurnStage.VICTORY;
         }
         else {
-            currentStage = TurnStage.FIND_NEXT_PLAYER;
+            currentStage = TurnStage.CHOOSE_ACTION;
         }
     }
 
@@ -506,13 +569,13 @@ public class BattleScene extends GameObjectTreeScene {
         return false;
     }
 
-    private boolean HexOccupied(int x, int y) {
+    private Entity HexOccupied(int x, int y) {
         for (Entity e : units) {
             if (e.pos.x == x && e.pos.y == y) {
-                return true;
+                return e;
             }
         }
-        return false;
+        return null;
     }
 
     private boolean PlayerUnitsDead() {
@@ -547,5 +610,54 @@ public class BattleScene extends GameObjectTreeScene {
         abilityButton.Show();
         itemButton.Show();
         endButton.Show();
+    }
+
+    private void PrintDamage(int damage, boolean critical, Entity attacker, Entity target) {
+        String message = new String();
+        message += attacker.name + " the " + attacker.className + " attacks! ";
+        if (damage > 0) {
+            message += target.name + " the " + target.className + " takes " + damage + " damage";
+        }
+        else if (damage < 0) {
+            message += target.name + " the " + target.className + " is healed by " + damage + " hitpoints";
+        }
+        else {
+            message += target.name + " the " + target.className + " takes no damage";
+        }
+        if (critical) {
+            message += "(Critical Hit!)";
+        }
+        TextLog.instance.Print(message, Color.white);
+    }
+
+    // private void PrintDamage(int damage, Ability ability, Entity caster, Entity target) {
+    // String message = new String();
+    // }
+
+    @SuppressWarnings("unused")
+    private void OnButtonDown(Event event, Subject subject) {
+        MouseEvent e = (MouseEvent) event;
+        selectedHex = grid.FindHexByPixel(e.getX(), e.getY());
+        if (!grid.ValidHexPosition(selectedHex.x, selectedHex.y)) {
+            selectedHex = null;
+        }
+    }
+
+    @SuppressWarnings("unused")
+    private void OnKeyDown(Event event, Subject subject) {
+        KeyboardEvent e = (KeyboardEvent) event;
+        System.out.println(e.getKey());
+        if (e.getKey() == 1) {
+            escKeyPressed = true;
+        }
+    }
+
+    @SuppressWarnings("unused")
+    private void OnKeyUp(Event event, Subject subject) {
+        KeyboardEvent e = (KeyboardEvent) event;
+        System.out.println(e.getKey());
+        if (e.getKey() == 1) {
+            escKeyPressed = false;
+        }
     }
 }

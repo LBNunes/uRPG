@@ -118,7 +118,7 @@ public class Classes {
         return false;
     }
 
-    public boolean IsCritical(Entity attacker) {
+    public static boolean IsCritical(Entity attacker) {
 
         double critFactor = 1.0f - table.get(attacker.classID).critRate;
         return critFactor < Math.random();

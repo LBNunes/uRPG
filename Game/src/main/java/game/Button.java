@@ -100,6 +100,7 @@ public class Button extends GameObject {
     public void Show() {
         visible = true;
         frozen = false;
+        Reset();
     }
 
     public boolean WasPressed() {
