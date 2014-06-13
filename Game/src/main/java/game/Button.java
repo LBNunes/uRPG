@@ -51,6 +51,7 @@ public class Button extends GameObject {
     private Point       pos;
     private Rect        box;
     private boolean     pressed;
+    private boolean     showTextOnMouseOver;
 
     public Button(AssetManager assets, String buttonLook, String buttonText, Color textColor, int x, int y) {
         screen = GameComponents.get(Screen.class);
@@ -61,9 +62,10 @@ public class Button extends GameObject {
         look = assets.newSprite(buttonLook);
         text = assets.newText(Config.BUTTON_FONT, buttonText);
         pos = new Point(x, y);
-        pressed = false;
 
         box = new Rect(x - look.getWidth() / 2, y - look.getHeight() / 2, look.getWidth(), look.getHeight());
+
+        Show();
     }
 
     @Override
@@ -73,10 +75,15 @@ public class Button extends GameObject {
 
     @Override
     protected void render(GameRenderers renderers) {
+
         if (!visible)
             return;
+
         look.render(screen, pos.x, pos.y, Corner.CENTER);
-        text.render(screen, pos.x, pos.y, Corner.CENTER, 1.0f, 0.0f, 1.0f, 1.0f, color);
+
+        if (!showTextOnMouseOver || box.IsInside(mouse.getX(), mouse.getY())) {
+            text.render(screen, pos.x, pos.y, Corner.CENTER, 1.0f, 0.0f, 1.0f, 1.0f, color);
+        }
     }
 
     @Override
@@ -109,6 +116,10 @@ public class Button extends GameObject {
 
     public void Reset() {
         pressed = false;
+    }
+
+    public void ShowTextOnMouseOver(boolean flag) {
+        showTextOnMouseOver = flag;
     }
 
     public void OnButtonDown(Event event, Subject subject) {

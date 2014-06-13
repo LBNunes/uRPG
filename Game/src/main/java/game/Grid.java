@@ -27,8 +27,6 @@
 
 package game;
 
-import game.WorldMapScene.WorldArea;
-
 import java.util.ArrayList;
 
 import org.unbiquitous.uImpala.engine.asset.AssetManager;
@@ -76,7 +74,7 @@ public class Grid extends GameObject {
         SINGLE_HEX, CIRCLE, DIAGONAL_UP_LINE, DIAGONAL_DOWN_LINE, HORIZONTAL_LINE, ALL
     }
 
-    public Grid(AssetManager assets, WorldArea area) {
+    public Grid(AssetManager assets, int area) {
         bg = LoadBG(assets, area);
         clearHex = assets.newSprite(Config.CLEAR_HEX);
         redHex = assets.newSprite(Config.RED_HEX);
@@ -105,13 +103,17 @@ public class Grid extends GameObject {
     }
 
     public void RenderAtHex(Sprite s, int x, int y) {
-        RenderAtHex(s, x, y, 1.0f);
+        RenderAtHex(s, x, y, 1.0f, 0.0f);
     }
 
     public void RenderAtHex(Sprite s, int x, int y, float opacity) {
+        RenderAtHex(s, x, y, opacity, 0.0f);
+    }
+
+    public void RenderAtHex(Sprite s, int x, int y, float opacity, float angle) {
         Point p = FindHexPosition(x, y);
         if (p != null)
-            s.render(screen, p.x, p.y, Corner.CENTER, opacity);
+            s.render(screen, p.x, p.y, Corner.CENTER, opacity, angle);
     }
 
     public Point FindHexPosition(int x, int y) {
@@ -335,13 +337,8 @@ public class Grid extends GameObject {
         }
     }
 
-    private Sprite LoadBG(AssetManager assets, WorldArea area) {
-        switch (area) {
-            case GRASSLAND:
-                return assets.newSprite(Config.GRASS_BG);
-            default:
-                return null;
-        }
+    private Sprite LoadBG(AssetManager assets, int area) {
+        return assets.newSprite(Area.GetArea(area).GetBGPath());
     }
 
     @Override

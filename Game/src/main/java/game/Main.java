@@ -46,8 +46,8 @@ public class Main {
                 System.out.println("Current working directory in Java : "
                                    + current);
 
-                System.out.println("Running on Windows? " + SystemInformation.IsWindows());
-                System.out.println("Has Battery? " + SystemInformation.HasBattery());
+                System.out.println("Running on Windows? " + EnvironmentInformation.IsWindows());
+                System.out.println("Has Battery? " + EnvironmentInformation.HasBattery());
 
                 if (args.length == 2 && args[0].equals("-rp"))
                     put("root_path", args[1]);

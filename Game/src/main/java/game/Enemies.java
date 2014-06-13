@@ -59,7 +59,7 @@ public class Enemies {
     }
 
     public static String GetName() {
-        return enemyNames.get((int) Math.floor(enemyNames.size() * Math.random()));
+        return enemyNames.get((int) (enemyNames.size() * Math.random()));
     }
 
     public static int GetMoveRange(int enemyID) {

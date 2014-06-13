@@ -32,10 +32,13 @@ import game.Item.ItemSlot;
 
 import org.unbiquitous.uImpala.engine.asset.AssetManager;
 import org.unbiquitous.uImpala.engine.asset.Sprite;
-import org.unbiquitous.uImpala.engine.core.GameObject;
-import org.unbiquitous.uImpala.engine.core.GameRenderers;
+import org.unbiquitous.uImpala.engine.asset.Text;
+import org.unbiquitous.uImpala.engine.io.MouseSource;
+import org.unbiquitous.uImpala.engine.io.Screen;
+import org.unbiquitous.uImpala.util.Color;
+import org.unbiquitous.uImpala.util.Corner;
 
-public class Entity extends GameObject {
+public class Entity {
 
     public Point    pos;
     public Sprite   sp;
@@ -51,6 +54,12 @@ public class Entity extends GameObject {
     public int      currentMP;
     public int      turnTimer;
     public boolean  playerUnit;
+
+    public Text     description1;
+    public Text     description2;
+    public Text     description3;
+    public Gauge    hpGauge;
+    public Gauge    mpGauge;
 
     public Entity(AssetManager assets, String name, ClassID classID, int jobLevel) {
         playerUnit = true;
@@ -69,9 +78,19 @@ public class Entity extends GameObject {
         moveRange = Classes.GetMoveRange(classID);
 
         RecalculateStats();
-        FullHeal();
 
         turnTimer = 0;
+
+        hpGauge = new Gauge(assets, stats.HP, Color.green);
+        mpGauge = new Gauge(assets, stats.MP, Color.blue);
+        description1 = assets.newText(Config.DESCRIPTION_FONT, name);
+        description2 = assets.newText(Config.DESCRIPTION_FONT, className + " (" + jobLevel + ")");
+        description3 = assets.newText(Config.DESCRIPTION_FONT,
+                                      "HP " + currentHP + "/" + stats.HP + " " + currentMP + "/" + stats.MP);
+        description1.options(null, Config.DESCRIPTION_FONT_SIZE, null);
+        description2.options(null, Config.DESCRIPTION_FONT_SIZE, null);
+        description3.options(null, Config.DESCRIPTION_FONT_SIZE, null);
+        FullHeal();
     }
 
     public Entity(AssetManager assets, int enemyID, int jobLevel) {
@@ -92,14 +111,28 @@ public class Entity extends GameObject {
         moveRange = Enemies.GetMoveRange(enemyID);
 
         RecalculateStats();
-        FullHeal();
 
         turnTimer = 0;
+
+        hpGauge = new Gauge(assets, stats.HP, Color.red);
+        mpGauge = new Gauge(assets, stats.MP, Color.blue);
+        description1 = assets.newText(Config.DESCRIPTION_FONT, name);
+        description2 = assets.newText(Config.DESCRIPTION_FONT, className + " (" + jobLevel + ")");
+        description3 = assets.newText(Config.DESCRIPTION_FONT,
+                                      "HP " + currentHP + "/" + stats.HP + " " + currentMP + "/" + stats.MP);
+        description1.options(null, Config.DESCRIPTION_FONT_SIZE, null);
+        description2.options(null, Config.DESCRIPTION_FONT_SIZE, null);
+        description3.options(null, Config.DESCRIPTION_FONT_SIZE, null);
+
+        FullHeal();
     }
 
     public void FullHeal() {
         currentHP = stats.HP;
         currentMP = stats.MP;
+        hpGauge.Update(currentHP);
+        mpGauge.Update(currentMP);
+        description3.setText(currentHP + "/" + stats.HP + " " + currentMP + "/" + stats.MP);
     }
 
     public void RecalculateStats() {
@@ -143,25 +176,61 @@ public class Entity extends GameObject {
 
     }
 
-    @Override
-    protected void update() {
+    public void Update() {
+
     }
 
-    @Override
-    protected void render(GameRenderers renderers) {
-    }
+    public void Render(Screen screen, int x, int y) {
 
-    @Override
-    protected void wakeup(Object... args) {
-    }
+        MouseSource mouse = screen.getMouse();
+        Rect box = new Rect(x - sp.getWidth() / 2, y - sp.getHeight() / 2, sp.getWidth(), sp.getHeight());
 
-    @Override
-    protected void destroy() {
+        if (!IsDead()) {
+            sp.render(screen, x, y, Corner.CENTER);
+        }
+        else {
+            sp.render(screen, x, y, Corner.CENTER, 1.0f, (playerUnit ? -90 : 90));
+        }
+
+        if (box.IsInside(mouse.getX(), mouse.getY())) {
+
+            hpGauge.Render(screen, x, (int) (y - (sp.getHeight() / 2 + mpGauge.GetHeight() * 1.5)));
+            mpGauge.Render(screen, x, (int) (y - (sp.getHeight() / 2 + mpGauge.GetHeight() * 0.5)));
+
+            description1.render(screen, x, y, Corner.TOP_LEFT);
+            description2.render(screen, x, y + description1.getHeight(), Corner.TOP_LEFT);
+            description3.render(screen, x, y + 2 * description1.getHeight(), Corner.TOP_LEFT);
+        }
+
     }
 
     public void Move(int x, int y) {
         pos.x = x;
         pos.y = y;
+    }
+
+    public boolean IsDead() {
+        return currentHP <= 0;
+    }
+
+    public void Damage(int damage) {
+        currentHP -= damage;
+        if (currentHP < 0) {
+            currentHP = 0;
+        }
+
+        hpGauge.Update(currentHP);
+        description3.setText(currentHP + "/" + stats.HP + " " + currentMP + "/" + stats.MP);
+    }
+
+    public void SpendMP(int cost) {
+        currentMP -= cost;
+        if (currentMP < 0) {
+            currentMP = 0;
+        }
+
+        mpGauge.Update(currentMP);
+        description3.setText(currentHP + "/" + stats.HP + " " + currentMP + "/" + stats.MP);
     }
 
 }

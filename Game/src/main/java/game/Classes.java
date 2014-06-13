@@ -126,7 +126,10 @@ public class Classes {
 
     public static int GetPhysicalFactor(Entity attacker, Entity defender) {
         // Possible adjustments: divide levels, square one of the factors, multiply by constant
-        return (int) (attacker.jobLevel * (attacker.stats.atk) / (float) (attacker.stats.def));
+        float jobMultiplier = 3 * attacker.jobLevel;
+        float statsFactor = (attacker.stats.atk) / (float) (defender.stats.def);
+        float randomFactor = 80 + (int) (Math.random() * ((120 - 80) + 1));
+        return (int) (jobMultiplier * statsFactor * randomFactor / 100);
     }
 
     public static int GetMagicalFactor(Entity caster, Entity defender) {

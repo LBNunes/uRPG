@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) Luísa Bontempo Nunes
-//     Created on 2014-06-07 ymd
+//     Created on 2014-06-12 ymd
 //
 // X11 Licensed Code
 //
@@ -27,46 +27,43 @@
 
 package game;
 
-public class SystemInformation {
+import org.unbiquitous.uImpala.engine.asset.AssetManager;
+import org.unbiquitous.uImpala.engine.asset.Sprite;
+import org.unbiquitous.uImpala.engine.io.Screen;
+import org.unbiquitous.uImpala.util.Color;
+import org.unbiquitous.uImpala.util.Corner;
 
-    public static String GetUserName() {
-        return System.getProperty("user.name");
+public class Gauge {
+
+    private Sprite body;
+    private Sprite fill;
+    private int    max;
+    private int    current;
+    private Color  color;
+
+    public Gauge(AssetManager assets, int max, Color color) {
+        body = assets.newSprite(Config.GAUGE_BODY);
+        fill = assets.newSprite(Config.GAUGE_FILL);
+        this.max = max;
+        this.current = max;
+        this.color = color;
     }
 
-    public static String GetOS() {
-        return System.getProperty("os.name");
+    public void Render(Screen screen, int x, int y) {
+        body.render(screen, x, y, Corner.CENTER);
+        fill.render(screen, x + (((current / (float) max) - 1) * fill.getWidth() / 2), y, Corner.CENTER,
+                    1.0f, 0.0f, current / (float) max, 1.0f, color);
     }
 
-    public static String GetOSVersion() {
-        return System.getProperty("os.version");
+    public void Update(int current) {
+        this.current = current;
     }
 
-    public static boolean IsWindows() {
-        return GetOS().startsWith("Windows");
+    public int GetWidth() {
+        return body.getWidth();
     }
 
-    public static boolean HasBattery() {
-        if (IsWindows()) {
-            Kernel32.SYSTEM_POWER_STATUS batteryStatus = new Kernel32.SYSTEM_POWER_STATUS();
-            Kernel32.INSTANCE.GetSystemPowerStatus(batteryStatus);
-
-            return batteryStatus.BatteryFlag != (byte) 128;
-        }
-        else {
-            // TODO: Linux support
-            return false;
-        }
-    }
-
-    public static void PrintBatteryInformation() {
-        if (IsWindows()) {
-            Kernel32.SYSTEM_POWER_STATUS batteryStatus = new Kernel32.SYSTEM_POWER_STATUS();
-            Kernel32.INSTANCE.GetSystemPowerStatus(batteryStatus);
-
-            System.out.println(batteryStatus);
-        }
-        else {
-            // TODO: Linux support
-        }
+    public int GetHeight() {
+        return body.getHeight();
     }
 }

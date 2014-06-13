@@ -31,7 +31,6 @@ import game.Classes.ClassID;
 import game.Grid.GridArea;
 import game.Grid.HexColors;
 import game.Item.ItemSlot;
-import game.WorldMapScene.WorldArea;
 
 import java.util.ArrayList;
 
@@ -58,29 +57,46 @@ public class BattleScene extends GameObjectTreeScene {
         CHECK_END, VICTORY, DEFEAT, BATTLE_END
     }
 
-    private Screen            screen;
-    private MouseSource       mouse;
-    private KeyboardSource    keyboard;
-    private PlayerData        playerData;
-    private ArrayList<Entity> units;
-    private AnimationQueue    animationQueue;
-    private Grid              grid;
-    private TurnStage         currentStage;
-    private TurnStage         nextStage;
-    private Point             selectedHex;
-    private Entity            currentEntity;
-    private boolean           hasMoved;
-    private boolean           hasActed;
-    private ArrayList<Point>  hexList;
+    private Screen               screen;
+    private GameRenderers        renderers;
+    private MouseSource          mouse;
+    private KeyboardSource       keyboard;
 
-    private Button            moveButton;
-    private Button            attackButton;
-    private Button            abilityButton;
-    private Button            itemButton;
-    private Button            endButton;
-    private boolean           escKeyPressed;
+    private PlayerData           playerData;
+    private int                  worldArea;
+    private ArrayList<Entity>    units;
+    private AnimationQueue       animationQueue;
+    private Grid                 grid;
+    private TurnStage            currentStage;
+    private TurnStage            nextStage;
+    private Point                selectedHex;
+    private Entity               currentEntity;
+    private boolean              hasMoved;
+    private boolean              hasActed;
+    private ArrayList<Point>     hexList;
 
-    public BattleScene(PlayerData playerData, WorldArea area) {
+    private Button               moveButton;
+    private Button               attackButton;
+    private Button               abilityButton;
+    private Button               itemButton;
+    private Button               endButton;
+    private boolean              escKeyPressed;
+
+    private static final Point[] allyLoc  = { new Point(0, 3),
+                                          new Point(0, 2),
+                                          new Point(0, 4),
+                                          new Point(0, 5),
+                                          new Point(0, 1),
+                                          };
+
+    private static final Point[] enemyLoc = { new Point(10, 3),
+                                          new Point(11, 2),
+                                          new Point(11, 4),
+                                          new Point(10, 5),
+                                          new Point(10, 1),
+                                          };
+
+    public BattleScene(PlayerData playerData, int area) {
 
         this.playerData = playerData;
 
@@ -95,15 +111,23 @@ public class BattleScene extends GameObjectTreeScene {
 
         escKeyPressed = false;
 
+        worldArea = area;
+
         // TODO: Unpack player data
-        // TODO: Create enemies
         units = new ArrayList<Entity>();
+
         Entity warrior = new Entity(assets, "Test Character", ClassID.WARRIOR, 1);
-        warrior.Move(0, 3);
+        warrior.Move(allyLoc[0].x, allyLoc[0].y);
         units.add(warrior);
-        Entity enemy = new Entity(assets, 001, 1);
-        enemy.Move(10, 3);
-        units.add(enemy);
+
+        int[] enemies = Area.GetEnemySet(area);
+
+        // TODO: Calculate jobLevel decently
+        for (int i = 0; i < enemyLoc.length && i < enemies.length; ++i) {
+            Entity e = new Entity(assets, enemies[i], 1);
+            e.Move(enemyLoc[i].x, enemyLoc[i].y);
+            units.add(e);
+        }
 
         grid = new Grid(assets, area);
 
@@ -167,7 +191,7 @@ public class BattleScene extends GameObjectTreeScene {
         }
         grid.update();
         for (Entity e : units) {
-            e.update();
+            e.Update();
         }
 
         TextLog.instance.Update();
@@ -176,10 +200,10 @@ public class BattleScene extends GameObjectTreeScene {
     }
 
     protected void render() {
-        GameRenderers renderers = new GameRenderers();
         grid.render(renderers);
         for (Entity e : units) {
-            grid.RenderAtHex(e.sp, e.pos.x, e.pos.y);
+            Point p = grid.FindHexPosition(e.pos.x, e.pos.y);
+            e.Render(screen, p.x, p.y);
         }
         animationQueue.Render();
 
@@ -233,6 +257,7 @@ public class BattleScene extends GameObjectTreeScene {
                 Stage_Victory();
                 break;
             case BATTLE_END:
+                Stage_BattleEnd();
                 break;
         }
     }
@@ -262,14 +287,14 @@ public class BattleScene extends GameObjectTreeScene {
         Entity turnTaker = null;
         while (turnTaker == null) {
             for (Entity e : units) {
-                if (e.turnTimer > largestTimer && e.currentHP > 0) {
+                if (e.turnTimer > largestTimer && !e.IsDead()) {
                     largestTimer = e.turnTimer;
                     turnTaker = e;
                 }
             }
             if (turnTaker == null) {
                 for (Entity e : units) {
-                    if (e.currentHP > 0) {
+                    if (!e.IsDead()) {
                         e.turnTimer += e.stats.spd;
                     }
                 }
@@ -379,11 +404,16 @@ public class BattleScene extends GameObjectTreeScene {
     private void Stage_ActionAttack() {
         if (selectedHex != null) {
             if (AlreadyListed(selectedHex.x, selectedHex.y)) {
+
                 Entity target = HexOccupied(selectedHex.x, selectedHex.y);
-                if (target != null && target.playerUnit != currentEntity.playerUnit) {
+
+                if (target != null && !target.IsDead() &&
+                    target.playerUnit != currentEntity.playerUnit) {
+
                     int damage = Classes.GetPhysicalFactor(currentEntity, target);
                     Point damagePos = grid.FindHexPosition(target.pos.x, target.pos.y);
                     damagePos.y -= Grid.hexRadius / 2;
+
                     if (Classes.IsCritical(currentEntity)) {
                         damage *= Config.CRITICAL_FACTOR;
                         animationQueue.Push(damage, true, damage >= 0 ? Color.red : Color.green, damagePos);
@@ -393,6 +423,12 @@ public class BattleScene extends GameObjectTreeScene {
                         animationQueue.Push(damage, false, damage >= 0 ? Color.red : Color.green, damagePos);
                         PrintDamage(damage, false, currentEntity, target);
                     }
+
+                    target.Damage(damage);
+                    if (target.IsDead()) {
+                        TextLog.instance.Print(target.name + " has fallen!", target.playerUnit ? Color.red : Color.blue);
+                    }
+
                     hasActed = true;
                     grid.ClearColors();
                     if (!(hasMoved && hasActed)) {
@@ -461,6 +497,11 @@ public class BattleScene extends GameObjectTreeScene {
         nextStage = TurnStage.BATTLE_END;
     }
 
+    private void Stage_BattleEnd() {
+        PlayerData.Save(Config.PLAYER_SAVE, playerData);
+        GameComponents.get(Game.class).pop();
+    }
+
     private void ListHexes(int x, int y, GridArea area, int range) {
 
         if (!grid.ValidHexPosition(x, y) && area != GridArea.ALL)
@@ -477,6 +518,7 @@ public class BattleScene extends GameObjectTreeScene {
                 if (!AlreadyListed(x, y)) {
                     hexList.add(new Point(x, y));
                 }
+
                 if (range > 0) {
                     ListHexes(x, y + 1, area, range - 1);
                     ListHexes(x, y - 1, area, range - 1);
@@ -580,7 +622,7 @@ public class BattleScene extends GameObjectTreeScene {
 
     private boolean PlayerUnitsDead() {
         for (Entity e : units) {
-            if (e.playerUnit && e.currentHP > 0) {
+            if (e.playerUnit && !e.IsDead()) {
                 return false;
             }
         }
@@ -589,7 +631,7 @@ public class BattleScene extends GameObjectTreeScene {
 
     private boolean EnemyUnitsDead() {
         for (Entity e : units) {
-            if (!e.playerUnit && e.currentHP > 0) {
+            if (!e.playerUnit && !e.IsDead()) {
                 return false;
             }
         }
@@ -629,10 +671,6 @@ public class BattleScene extends GameObjectTreeScene {
         }
         TextLog.instance.Print(message, Color.white);
     }
-
-    // private void PrintDamage(int damage, Ability ability, Entity caster, Entity target) {
-    // String message = new String();
-    // }
 
     @SuppressWarnings("unused")
     private void OnButtonDown(Event event, Subject subject) {

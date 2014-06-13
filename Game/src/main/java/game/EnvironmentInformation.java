@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) Luísa Bontempo Nunes
-//     Created on 2014-05-29 ymd
+//     Created on 2014-06-07 ymd
 //
 // X11 Licensed Code
 //
@@ -27,21 +27,51 @@
 
 package game;
 
-import java.util.ArrayList;
+public class EnvironmentInformation {
 
-public class PlayerData {
-    ArrayList<Entity> party;
-
-    public PlayerData() {
-        party = new ArrayList<Entity>();
+    public static String GetUserName() {
+        return System.getProperty("user.name");
     }
 
-    public static PlayerData Load(String playerSave) {
-        // TODO: Create save structure
-        return new PlayerData();
+    public static String GetOS() {
+        return System.getProperty("os.name");
     }
 
-    public static void Save(String playerSave, PlayerData playerData) {
-        // TODO: Create save structure
+    public static String GetOSVersion() {
+        return System.getProperty("os.version");
+    }
+
+    public static boolean IsWindows() {
+        return GetOS().startsWith("Windows");
+    }
+
+    public static String GetSSID() {
+        // TODO: This
+        return "Ubiquia";
+    }
+
+    public static boolean HasBattery() {
+        if (IsWindows()) {
+            Kernel32.SYSTEM_POWER_STATUS batteryStatus = new Kernel32.SYSTEM_POWER_STATUS();
+            Kernel32.INSTANCE.GetSystemPowerStatus(batteryStatus);
+
+            return batteryStatus.BatteryFlag != (byte) 128;
+        }
+        else {
+            // TODO: Linux support
+            return false;
+        }
+    }
+
+    public static void PrintBatteryInformation() {
+        if (IsWindows()) {
+            Kernel32.SYSTEM_POWER_STATUS batteryStatus = new Kernel32.SYSTEM_POWER_STATUS();
+            Kernel32.INSTANCE.GetSystemPowerStatus(batteryStatus);
+
+            System.out.println(batteryStatus);
+        }
+        else {
+            // TODO: Linux support
+        }
     }
 }

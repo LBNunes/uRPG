@@ -35,8 +35,10 @@ public class Config {
     public static final boolean FULLSCREEN             = false;
     public static final String  WINDOW_ICON            = null;
 
-    public static final String  SAND_BG                = "img/sandbg.jpg";
-    public static final String  GRASS_BG               = "img/grassbg.jpg";
+    public static final String  WORLD_BG               = "img/world.png";
+    public static final String  WORLD_FONT             = "font/Plakat-Fraktur Black.ttf";
+    public static final float   WORLD_FONT_SIZE        = 48f;
+
     public static final String  CLEAR_HEX              = "img/clearhex.png";
     public static final String  RED_HEX                = "img/redhex.png";
     public static final String  GREEN_HEX              = "img/greenhex.png";
@@ -56,6 +58,8 @@ public class Config {
     public static final String  ITEM_DATA              = "data/item";
     public static final String  CLASS_DATA             = "data/class";
     public static final String  ENEMY_DATA             = "data/enemy";
+    public static final String  AREA_DATA              = "data/area";
+    public static final String  ENEMY_SET_DATA         = "data/enemyset";
     public static final String  PLAYER_NAMES           = "data/names";
     public static final String  ENEMY_NAMES            = "data/enemynames";
 
@@ -76,4 +80,13 @@ public class Config {
     public static final int     LOG_FONT_SIZE          = 16;
     public static final int     LOG_CAP                = 6;
     public static final float   LOG_EXPIRE_TIME        = 8.0f;
+
+    public static final String  GAUGE_BODY             = "img/gaugebody.png";
+    public static final String  GAUGE_FILL             = "img/gaugefill.png";
+
+    public static final String  DESCRIPTION_FONT       = "font/seguisb.ttf";
+    public static final float   DESCRIPTION_FONT_SIZE  = 16f;
+
+    public static final String  PLAYER_SAVE            = "save/save";
+
 }
