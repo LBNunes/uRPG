@@ -191,6 +191,7 @@ public class Classes {
         catch (IOException e) {
             System.out.println("WARNING: File '" + Config.CLASS_DATA + "' may have been read incorrectly.");
         }
+
     }
 
     private static class ClassData {

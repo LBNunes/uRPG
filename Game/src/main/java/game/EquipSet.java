@@ -76,4 +76,15 @@ public class EquipSet {
                 break;
         }
     }
+
+    public void Set(int weapon, int armor, int extra) {
+        item[0] = Item.GetItem(weapon);
+        item[1] = Item.GetItem(armor);
+        item[2] = Item.GetItem(extra);
+    }
+
+    @Override
+    public String toString() {
+        return "" + item[0].GetID() + " " + item[1].GetID() + " " + item[2].GetID();
+    }
 }

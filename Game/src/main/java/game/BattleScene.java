@@ -27,7 +27,6 @@
 
 package game;
 
-import game.Classes.ClassID;
 import game.Grid.GridArea;
 import game.Grid.HexColors;
 import game.Item.ItemSlot;
@@ -63,7 +62,6 @@ public class BattleScene extends GameObjectTreeScene {
     private KeyboardSource       keyboard;
 
     private PlayerData           playerData;
-    private int                  worldArea;
     private ArrayList<Entity>    units;
     private AnimationQueue       animationQueue;
     private Grid                 grid;
@@ -74,6 +72,8 @@ public class BattleScene extends GameObjectTreeScene {
     private boolean              hasMoved;
     private boolean              hasActed;
     private ArrayList<Point>     hexList;
+
+    private boolean              quitWarning;
 
     private Button               moveButton;
     private Button               attackButton;
@@ -111,14 +111,13 @@ public class BattleScene extends GameObjectTreeScene {
 
         escKeyPressed = false;
 
-        worldArea = area;
-
-        // TODO: Unpack player data
         units = new ArrayList<Entity>();
 
-        Entity warrior = new Entity(assets, "Test Character", ClassID.WARRIOR, 1);
-        warrior.Move(allyLoc[0].x, allyLoc[0].y);
-        units.add(warrior);
+        for (int i = 0; i < allyLoc.length && i < playerData.party.size(); ++i) {
+            Entity e = playerData.party.get(i);
+            e.Move(allyLoc[i].x, allyLoc[i].y);
+            units.add(e);
+        }
 
         int[] enemies = Area.GetEnemySet(area);
 
@@ -181,13 +180,23 @@ public class BattleScene extends GameObjectTreeScene {
 
         HideActionButtons();
 
+        quitWarning = false;
+
         TextLog.instance.SetAssets(assets);
         TextLog.instance.Clear();
     }
 
     protected void update() {
         if (screen.isCloseRequested()) {
-            GameComponents.get(Game.class).quit();
+            if (quitWarning) {
+                playerData.gold -= playerData.gold / 10;
+                PlayerData.Save(Config.PLAYER_SAVE, playerData);
+                GameComponents.get(Game.class).quit();
+            }
+            else {
+                quitWarning = true;
+                TextLog.instance.Print("WARNING: Quitting mid-battle will result in a loss of gold.", Color.red);
+            }
         }
         grid.update();
         for (Entity e : units) {
@@ -684,7 +693,6 @@ public class BattleScene extends GameObjectTreeScene {
     @SuppressWarnings("unused")
     private void OnKeyDown(Event event, Subject subject) {
         KeyboardEvent e = (KeyboardEvent) event;
-        System.out.println(e.getKey());
         if (e.getKey() == 1) {
             escKeyPressed = true;
         }
@@ -693,7 +701,6 @@ public class BattleScene extends GameObjectTreeScene {
     @SuppressWarnings("unused")
     private void OnKeyUp(Event event, Subject subject) {
         KeyboardEvent e = (KeyboardEvent) event;
-        System.out.println(e.getKey());
         if (e.getKey() == 1) {
             escKeyPressed = false;
         }

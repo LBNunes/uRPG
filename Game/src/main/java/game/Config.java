@@ -62,6 +62,7 @@ public class Config {
     public static final String  ENEMY_SET_DATA         = "data/enemyset";
     public static final String  PLAYER_NAMES           = "data/names";
     public static final String  ENEMY_NAMES            = "data/enemynames";
+    public static final String  EXP_TABLE              = "data/exp";
 
     public static final String  BUTTON_LOOK            = "img/button.png";
     public static final String  BUTTON_FONT            = "font/seguisb.ttf";

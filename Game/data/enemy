@@ -1,2 +1,2 @@
 # ID NAME           SPRITE                  CLASS      MOVE HP  MP ATK DEF MAG RES SPD
-001 Test_Enemy      img/TestEnemy.png       WARRIOR     2   10  10  6   6   6   6   6
+001 Test_Enemy      img/testenemy.png       WARRIOR     2   10  10  6   6   6   6   6

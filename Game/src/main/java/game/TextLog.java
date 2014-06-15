@@ -46,7 +46,6 @@ public class TextLog {
     private Screen              screen;
     private int                 cap;
     private String              font;
-    private int                 fontSize;
     private float               expireTime;
     private ArrayDeque<LogData> queue;
     private AssetManager        assets;
@@ -57,7 +56,6 @@ public class TextLog {
 
         cap = logCap;
         font = logFont;
-        fontSize = logFontSize;
         expireTime = logExpireTime;
 
         queue = new ArrayDeque<LogData>();

@@ -27,21 +27,223 @@
 
 package game;
 
+import game.Classes.ClassID;
+import game.PlayerData.Inventory.IEntry;
+
+import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Scanner;
+import java.util.StringTokenizer;
+import java.util.UUID;
+
+import org.unbiquitous.uImpala.engine.asset.AssetManager;
 
 public class PlayerData {
+
+    UUID              uuid;
+    int               gold;
     ArrayList<Entity> party;
+    Inventory         inventory;
+
+    // TODO: Energy data
+    // TODO: Mission data
+    // TODO: Mission time
+    // TODO: Entity Ability data
 
     public PlayerData() {
+        uuid = null;
         party = new ArrayList<Entity>();
+        inventory = new Inventory();
     }
 
-    public static PlayerData Load(String playerSave) {
-        // TODO: Create save structure
-        return new PlayerData();
+    public static PlayerData Load(AssetManager assets, String playerSave) {
+
+        PlayerData data = new PlayerData();
+
+        FileInputStream f;
+        try {
+            f = new FileInputStream(playerSave);
+            Scanner s = new Scanner(f);
+            String line;
+            StringTokenizer tokenizer;
+
+            line = s.nextLine();
+            tokenizer = new StringTokenizer(line, " ");
+
+            data.uuid = new UUID(Long.parseLong(tokenizer.nextToken()),
+                                 Long.parseLong(tokenizer.nextToken()));
+
+            line = s.nextLine();
+
+            data.gold = Integer.parseInt(line);
+
+            line = s.nextLine();
+            tokenizer = new StringTokenizer(line, " ");
+
+            int partySize = Integer.parseInt(tokenizer.nextToken());
+
+            System.out.println(partySize);
+            for (int i = 0; i < partySize; ++i) {
+                Entity e = new Entity(assets, tokenizer.nextToken(),
+                                      ClassID.valueOf(tokenizer.nextToken()),
+                                      Integer.parseInt(tokenizer.nextToken()));
+                e.GiveJobExp(Integer.parseInt(tokenizer.nextToken()));
+                e.equipment.Set(Integer.parseInt(tokenizer.nextToken()),
+                                Integer.parseInt(tokenizer.nextToken()),
+                                Integer.parseInt(tokenizer.nextToken()));
+                data.party.add(e);
+            }
+
+            line = s.nextLine();
+            tokenizer = new StringTokenizer(line, " ");
+
+            int inventorySize = Integer.parseInt(tokenizer.nextToken());
+
+            for (int i = 0; i < inventorySize; ++i) {
+                data.inventory.AddItem(Integer.parseInt(tokenizer.nextToken()),
+                                       Integer.parseInt(tokenizer.nextToken()));
+            }
+
+            s.close();
+            f.close();
+        }
+        catch (FileNotFoundException e) {
+            return CreateNew(assets);
+        }
+        catch (IOException e) {
+            System.out.println("FATAL ERROR: Save file corrupted!");
+            System.exit(1);
+        }
+
+        return data;
     }
 
-    public static void Save(String playerSave, PlayerData playerData) {
-        // TODO: Create save structure
+    public static void Save(String save, PlayerData data) {
+        BufferedWriter w = null;
+
+        try {
+            w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(save),
+                                                          "utf-8"));
+            w.write("" + data.uuid.getMostSignificantBits() + " " + data.uuid.getLeastSignificantBits() + '\n');
+            w.write("" + Integer.toString(data.gold) + "\n");
+
+            w.write("" + data.party.size() + " ");
+
+            for (Entity e : data.party) {
+                WriteEntity(w, e);
+            }
+
+            w.write("\n");
+
+            w.write("" + data.inventory.itemList.size() + " ");
+
+            for (IEntry e : data.inventory.itemList) {
+                w.write("" + e.item + " " + e.amount + " ");
+            }
+
+            w.write("\n");
+
+            w.close();
+        }
+        catch (IOException ex) {
+        }
+    }
+
+    private static void WriteEntity(BufferedWriter w, Entity e) throws IOException {
+        w.write("" + e.name + " ");
+        w.write("" + e.classID + " " + e.jobLevel + " " + e.jobExp + " ");
+        w.write("" + e.equipment.toString() + " ");
+    }
+
+    private static PlayerData CreateNew(AssetManager assets) {
+
+        PlayerData data = new PlayerData();
+
+        data.uuid = UUID.randomUUID();
+
+        data.gold = 0;
+
+        Entity warrior = new Entity(assets, Entity.GetRandomName(), ClassID.WARRIOR, 1);
+        Entity rogue = new Entity(assets, Entity.GetRandomName(), ClassID.ROGUE, 1);
+        Entity mage = new Entity(assets, Entity.GetRandomName(), ClassID.MAGE, 1);
+
+        data.party.add(warrior);
+        data.party.add(rogue);
+        data.party.add(mage);
+
+        // 3 x Life Potion, 1 x Mana Potion
+        data.inventory.AddItem(501, 3);
+        data.inventory.AddItem(502, 1);
+
+        return data;
+    }
+
+    public static class Inventory {
+        public ArrayList<IEntry> itemList;
+
+        public Inventory() {
+            itemList = new ArrayList<IEntry>();
+        }
+
+        public boolean AddItem(int item, int amount) {
+            for (IEntry e : itemList) {
+                if (e.item == item) {
+                    e.amount += amount;
+                    return true;
+                }
+            }
+            itemList.add(new IEntry(item, amount));
+            return false;
+        }
+
+        public boolean HasItem(int item) {
+            return ItemAmount(item) > 0;
+        }
+
+        public int ItemAmount(int item) {
+            for (IEntry e : itemList) {
+                if (e.item == item) {
+                    return e.amount;
+                }
+            }
+            return 0;
+        }
+
+        public boolean TakeItem(int item, int amount) {
+            Iterator<IEntry> i = itemList.iterator();
+            while (i.hasNext()) {
+                IEntry e = i.next();
+                if (e.item == item) {
+                    if (amount > e.amount) {
+                        return false;
+                    }
+                    else if (amount == e.amount) {
+                        i.remove();
+                        return true;
+                    }
+                    else {
+                        e.amount -= amount;
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public static class IEntry {
+            public int item;
+            public int amount;
+
+            public IEntry(int _item, int _amount) {
+                item = _item;
+                amount = _amount;
+            }
+        }
     }
 }

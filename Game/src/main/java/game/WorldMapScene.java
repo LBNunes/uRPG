@@ -77,6 +77,8 @@ public class WorldMapScene extends GameScene {
 
         Item.InitTable();
         Classes.InitStats();
+        Entity.InitNames();
+        Entity.InitExp();
         Enemies.InitNames();
         Enemies.InitTable();
         Area.InitAreas();
@@ -85,7 +87,7 @@ public class WorldMapScene extends GameScene {
         bg = assets.newSprite(Config.WORLD_BG);
 
         // TODO: Load Save
-        data = PlayerData.Load(Config.PLAYER_SAVE);
+        data = PlayerData.Load(assets, Config.PLAYER_SAVE);
 
         regionName = EnvironmentInformation.GetSSID();
         regionText = assets.newText(Config.WORLD_FONT, "The Lands of " + regionName);
@@ -113,6 +115,7 @@ public class WorldMapScene extends GameScene {
     protected void update() {
 
         if (screen.isCloseRequested()) {
+            PlayerData.Save(Config.PLAYER_SAVE, data);
             GameComponents.get(Game.class).quit();
         }
 

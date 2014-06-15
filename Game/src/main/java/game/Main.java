@@ -42,28 +42,29 @@ public class Main {
     public static void main(final String[] args) {
         Game.run(new GameSettings() {
             {
-                String current = System.getProperty("user.dir");
-                System.out.println("Current working directory in Java : "
-                                   + current);
-
                 System.out.println("Running on Windows? " + EnvironmentInformation.IsWindows());
                 System.out.println("Has Battery? " + EnvironmentInformation.HasBattery());
 
                 if (args.length == 2 && args[0].equals("-rp"))
                     put("root_path", args[1]);
-                put("first_scene", WorldMapScene.class);
-                put("input_managers", new ArrayList<Class<?>>() {
-                    {
-                        add(KeyboardManager.class);
-                        add(MouseManager.class);
-                    }
-                });
-                put("output_managers", new ArrayList<Class<?>>() {
-                    {
-                        add(ScreenManager.class);
-                        add(SpeakerManager.class);
-                    }
-                });
+                if (EnvironmentInformation.HasBattery()) {
+                    put("first_scene", WorldMapScene.class);
+                    put("input_managers", new ArrayList<Class<?>>() {
+                        {
+                            add(KeyboardManager.class);
+                            add(MouseManager.class);
+                        }
+                    });
+                    put("output_managers", new ArrayList<Class<?>>() {
+                        {
+                            add(ScreenManager.class);
+                            add(SpeakerManager.class);
+                        }
+                    });
+                }
+                else {
+                    put("first_scene", CityServer.class);
+                }
             }
         });
     }

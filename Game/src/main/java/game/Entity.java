@@ -30,6 +30,13 @@ package game;
 import game.Classes.ClassID;
 import game.Item.ItemSlot;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Scanner;
+import java.util.StringTokenizer;
+
 import org.unbiquitous.uImpala.engine.asset.AssetManager;
 import org.unbiquitous.uImpala.engine.asset.Sprite;
 import org.unbiquitous.uImpala.engine.asset.Text;
@@ -40,26 +47,30 @@ import org.unbiquitous.uImpala.util.Corner;
 
 public class Entity {
 
-    public Point    pos;
-    public Sprite   sp;
-    public Stats    stats;
-    public String   name;
-    public String   className;
-    public ClassID  classID;
-    public EquipSet equipment;
-    public int      moveRange;
-    public int      jobLevel;
-    public int      enemyID;
-    public int      currentHP;
-    public int      currentMP;
-    public int      turnTimer;
-    public boolean  playerUnit;
+    public Point                      pos;
+    public Sprite                     sp;
+    public Stats                      stats;
+    public String                     name;
+    public String                     className;
+    public ClassID                    classID;
+    public EquipSet                   equipment;
+    public int                        moveRange;
+    public int                        jobLevel;
+    public int                        jobExp;
+    public int                        enemyID;
+    public int                        currentHP;
+    public int                        currentMP;
+    public int                        turnTimer;
+    public boolean                    playerUnit;
 
-    public Text     description1;
-    public Text     description2;
-    public Text     description3;
-    public Gauge    hpGauge;
-    public Gauge    mpGauge;
+    public Text                       description1;
+    public Text                       description2;
+    public Text                       description3;
+    public Gauge                      hpGauge;
+    public Gauge                      mpGauge;
+
+    private static ArrayList<String>  names = new ArrayList<String>();
+    private static ArrayList<Integer> exp   = new ArrayList<Integer>();
 
     public Entity(AssetManager assets, String name, ClassID classID, int jobLevel) {
         playerUnit = true;
@@ -72,6 +83,7 @@ public class Entity {
         equipment = new EquipSet();
 
         this.jobLevel = jobLevel;
+        jobExp = 0;
 
         enemyID = 000;
 
@@ -107,6 +119,7 @@ public class Entity {
 
         this.enemyID = enemyID;
         this.jobLevel = jobLevel;
+        jobExp = 0;
 
         moveRange = Enemies.GetMoveRange(enemyID);
 
@@ -213,6 +226,20 @@ public class Entity {
         return currentHP <= 0;
     }
 
+    public boolean GiveJobExp(int exp) {
+        jobExp += exp;
+        int levelUp = GetExpForLevelUp(jobLevel);
+        boolean leveled = false;
+        while (jobExp > levelUp) {
+            jobLevel++;
+            jobExp -= levelUp;
+            levelUp = GetExpForLevelUp(jobLevel);
+            leveled = true;
+        }
+
+        return leveled;
+    }
+
     public void Damage(int damage) {
         currentHP -= damage;
         if (currentHP < 0) {
@@ -233,4 +260,81 @@ public class Entity {
         description3.setText(currentHP + "/" + stats.HP + " " + currentMP + "/" + stats.MP);
     }
 
+    public static String GetRandomName() {
+        return names.get((int) (names.size() * Math.random()));
+    }
+
+    public static int GetExpForLevelUp(int jobLevel) {
+        return exp.get(jobLevel);
+    }
+
+    public static void InitNames() {
+        FileInputStream f;
+        try {
+            f = new FileInputStream(Config.PLAYER_NAMES);
+            Scanner s = new Scanner(f);
+            String line;
+
+            String _name;
+
+            while (s.hasNextLine()) {
+                line = s.nextLine();
+
+                if (line.length() == 0 || line.charAt(0) == '#') {
+                    continue;
+                }
+
+                StringTokenizer tokenizer = new StringTokenizer(line, " ");
+
+                _name = tokenizer.nextToken();
+
+                names.add(_name);
+            }
+
+            s.close();
+            f.close();
+        }
+        catch (FileNotFoundException e) {
+            System.out.println("FATAL ERROR: File '" + Config.PLAYER_NAMES + "' was not found!");
+            System.exit(1);
+        }
+        catch (IOException e) {
+            System.out.println("WARNING: File '" + Config.PLAYER_NAMES + "' may have been read incorrectly.");
+        }
+    }
+
+    public static void InitExp() {
+        FileInputStream f;
+        try {
+            f = new FileInputStream(Config.EXP_TABLE);
+            Scanner s = new Scanner(f);
+            String line;
+
+            int _exp;
+
+            while (s.hasNextLine()) {
+                line = s.nextLine();
+
+                if (line.length() == 0 || line.charAt(0) == '#') {
+                    continue;
+                }
+
+                StringTokenizer tokenizer = new StringTokenizer(line, " ");
+
+                _exp = Integer.parseInt(tokenizer.nextToken());
+
+                exp.add(_exp);
+            }
+
+            s.close();
+            f.close();
+        }
+        catch (FileNotFoundException e) {
+            System.out.println("FATAL ERROR: File '" + Config.EXP_TABLE + "' was not found!");
+            System.exit(1);
+        }
+        catch (IOException e) {
+            System.out.println("WARNING: File '" + Config.EXP_TABLE + "' may have been read incorrectly.");
+        }
+    }
 }
