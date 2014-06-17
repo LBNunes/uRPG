@@ -30,5 +30,6 @@
 	</classpathentry>
 	<classpathentry kind="lib" path="C:/Misc/Eclipse/jna-4.1.0.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="C:/Misc/Eclipse/slf4j-simple-1.7.7.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

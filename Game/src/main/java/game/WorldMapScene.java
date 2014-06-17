@@ -84,6 +84,8 @@ public class WorldMapScene extends GameScene {
         Area.InitAreas();
         Area.InitEnemySets();
 
+        DayNightDetector.IsDay();
+
         bg = assets.newSprite(Config.WORLD_BG);
 
         // TODO: Load Save
