@@ -6,7 +6,7 @@
 005 Haunted_Mansion     img/icon/hauntedicon.png    img/bg/hauntedbg.jpg
 006 Dungeon             img/icon/dungeonicon.png    img/bg/dungeonbg.jpg
 007 Cave                img/icon/caveicon.png       img/bg/cavebg.jpg
-008 Ice Cave            img/icon/icecaveicon.png    img/bg/icecavebg.jpg
+008 Ice_Cave            img/icon/icecaveicon.png    img/bg/icecavebg.jpg
 009 Lake                img/icon/lakeicon.png       img/bg/lakebg.jpg
 010 Shore               img/icon/shoreicon.png      img/bg/shorebg.jpg
 011 Mountains           img/icon/mountainsicon.png  img/bg/mountains.jpg

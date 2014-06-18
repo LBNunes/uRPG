@@ -68,6 +68,11 @@ public class WorldMapScene extends GameScene {
                                         new Point(513, 200)
                                         };
 
+    private boolean           isDay;
+    private Sprite            dayNightIcon;
+    private Sprite            goldIcon;
+    private Text              playerGold;
+
     public WorldMapScene() {
         // Initialize the screen manager
         screen = GameComponents.get(ScreenManager.class).create();
@@ -75,42 +80,21 @@ public class WorldMapScene extends GameScene {
                     Config.SCREEN_HEIGHT, Config.FULLSCREEN, Config.WINDOW_ICON);
         GameComponents.put(Screen.class, screen);
 
-        Item.InitTable();
-        Classes.InitStats();
-        Entity.InitNames();
-        Entity.InitExp();
-        Enemies.InitNames();
-        Enemies.InitTable();
-        Area.InitAreas();
-        Area.InitEnemySets();
+        InitializeTables();
 
-        DayNightDetector.IsDay();
+        CheckDayNight();
 
         bg = assets.newSprite(Config.WORLD_BG);
 
-        // TODO: Load Save
         data = PlayerData.Load(assets, Config.PLAYER_SAVE);
 
-        regionName = EnvironmentInformation.GetSSID();
-        regionText = assets.newText(Config.WORLD_FONT, "The Lands of " + regionName);
-        regionText.options(null, Config.WORLD_FONT_SIZE, true);
-        areas = Area.GenerateAreaSet(regionName);
+        goldIcon = assets.newSprite(Config.GOLD_ICON);
+        playerGold = assets.newText(Config.GOLD_FONT, "");
+        playerGold.options(null, Config.GOLD_SIZE, true);
 
-        ShuffleLocations();
+        UpdateGold();
 
-        int i;
-
-        areaButtons = new ArrayList<Button>();
-        for (i = 0; i < areas.length; ++i) {
-            Area a = Area.GetArea(areas[i]);
-            Button b = new Button(assets, a.GetIconPath(), a.GetName(), Color.white, locations[i].x, locations[i].y);
-            b.ShowTextOnMouseOver(true);
-            areaButtons.add(b);
-        }
-
-        // TODO: Add city discovery
-        cityButtons = new ArrayList<Button>();
-
+        CreateRegion(EnvironmentInformation.GetSSID());
     }
 
     @Override
@@ -144,6 +128,13 @@ public class WorldMapScene extends GameScene {
         for (Button b : cityButtons) {
             b.render(renderers);
         }
+
+        goldIcon.render(screen, Config.SCREEN_HEIGHT * 0.02f,
+                        Config.SCREEN_HEIGHT * 0.98f, Corner.BOTTOM_LEFT);
+        playerGold.render(screen, Config.SCREEN_HEIGHT * 0.02f + goldIcon.getWidth() * 1.2f,
+                          Config.SCREEN_HEIGHT * 0.99f, Corner.BOTTOM_LEFT);
+        dayNightIcon.render(screen, Config.SCREEN_WIDTH - Config.SCREEN_HEIGHT * 0.02f,
+                            Config.SCREEN_HEIGHT * 0.98f, Corner.BOTTOM_RIGHT);
     }
 
     @Override
@@ -152,9 +143,11 @@ public class WorldMapScene extends GameScene {
             b.Reset();
         }
 
-        for (Button b : areaButtons) {
+        for (Button b : cityButtons) {
             b.Reset();
         }
+
+        UpdateGold();
 
         this.frozen = false;
         this.visible = true;
@@ -177,5 +170,68 @@ public class WorldMapScene extends GameScene {
             locations[idx1] = locations[idx2];
             locations[idx2] = p;
         }
+    }
+
+    private void InitializeTables() {
+
+        Item.InitTable();
+        Classes.InitStats();
+        Entity.InitNames();
+        Entity.InitExp();
+        Enemies.InitNames();
+        Enemies.InitTable();
+        Area.InitAreas();
+        Area.InitEnemySets();
+    }
+
+    private void CheckDayNight() {
+
+        isDay = DayNightDetector.IsDay();
+        if (isDay) {
+            dayNightIcon = assets.newSprite(Config.DAY_ICON);
+        }
+        else {
+            dayNightIcon = assets.newSprite(Config.NIGHT_ICON);
+        }
+    }
+
+    private void CreateRegion(String name) {
+        regionName = name;
+        regionText = assets.newText(Config.WORLD_FONT, "The Lands of " + regionName);
+        regionText.options(null, Config.WORLD_FONT_SIZE, true);
+        areas = Area.GenerateAreaSet(regionName);
+
+        ShuffleLocations();
+
+        int i;
+
+        areaButtons = new ArrayList<Button>();
+        for (i = 0; i < areas.length; ++i) {
+            Area a = Area.GetArea(areas[i]);
+            Button b = new Button(assets, a.GetIconPath(), a.GetName(), Color.white, locations[i].x, locations[i].y);
+            b.ShowTextOnMouseOver(true);
+            areaButtons.add(b);
+        }
+
+        // TODO: Add city discovery
+        cityButtons = new ArrayList<Button>();
+    }
+
+    private void UpdateGold() {
+
+        String gold = new String();
+        if (data.gold < 100000)
+            gold += '0';
+        if (data.gold < 10000)
+            gold += '0';
+        if (data.gold < 1000)
+            gold += '0';
+        if (data.gold < 100)
+            gold += '0';
+        if (data.gold < 10)
+            gold += '0';
+        gold += data.gold;
+
+        playerGold.setText(gold);
     }
 }

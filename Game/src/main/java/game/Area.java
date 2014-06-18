@@ -140,6 +140,7 @@ public class Area {
                 _bg = tokenizer.nextToken();
 
                 table.put(_id, new Area(_name, _icon, _bg));
+
             }
 
             s.close();

@@ -77,6 +77,13 @@ public class Config {
 
     public static final float   CRITICAL_FACTOR        = 1.5f;
 
+    public static final String  GOLD_ICON              = "img/GoldCoin_twoB.png";
+    public static final String  GOLD_FONT              = "font/seguisb.ttf";
+    public static final float   GOLD_SIZE              = 48f;
+
+    public static final String  DAY_ICON               = "img/day.png";
+    public static final String  NIGHT_ICON             = "img/night.png";
+
     public static final String  LOG_FONT               = "font/seguisb.ttf";
     public static final int     LOG_FONT_SIZE          = 16;
     public static final int     LOG_CAP                = 6;

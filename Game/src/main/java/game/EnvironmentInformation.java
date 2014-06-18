@@ -27,6 +27,10 @@
 
 package game;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
 public class EnvironmentInformation {
 
     public static String GetUserName() {
@@ -46,8 +50,41 @@ public class EnvironmentInformation {
     }
 
     public static String GetSSID() {
-        // TODO: This
-        return "Ubiquia";
+        String ssid = null;
+
+        if (IsWindows()) {
+            try {
+                ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", "netsh wlan show interfaces");
+                Process p = pb.start();
+
+                BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                String line;
+
+                while (true) {
+                    line = r.readLine();
+                    if (line == null) {
+                        break;
+                    }
+                    if (line.contains("SSID")) {
+                        ssid = line.substring(line.indexOf(':') + 2);
+                        break;
+                    }
+                }
+            }
+            catch (IOException e) {
+            }
+
+            if (ssid == null) {
+                ssid = "Not found";
+            }
+
+        }
+        else {
+            // TODO: Linux
+            ssid = "Not found";
+        }
+
+        return ssid;
     }
 
     public static boolean HasBattery() {
