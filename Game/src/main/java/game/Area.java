@@ -43,25 +43,39 @@ public class Area {
     private String                        name;
     private String                        iconPath;
     private String                        bgPath;
-    private ArrayList<ArrayList<Integer>> enemySets;
+    private ArrayList<EnemySet>           enemySets;
 
     private Area(String _name, String _icon, String _bg) {
         name = _name;
         iconPath = _icon;
         bgPath = _bg;
-        enemySets = new ArrayList<ArrayList<Integer>>();
+        enemySets = new ArrayList<EnemySet>();
     }
 
     public static Area GetArea(int id) {
         return table.get(id);
     }
 
-    public static int[] GetEnemySet(int id) {
+    public static int[] GetEnemySet(int id, boolean isDay) {
 
-        ArrayList<ArrayList<Integer>> list = table.get(id).enemySets;
-        int idx = (int) (Math.random() * list.size());
+        ArrayList<EnemySet> list = table.get(id).enemySets;
+        double roll = Math.random();
 
-        ArrayList<Integer> set = list.get(idx);
+        ArrayList<Integer> set = null;
+        while (set == null) {
+            for (EnemySet e : list) {
+                if (isDay) {
+                    roll -= e.dayProb;
+                }
+                else {
+                    roll -= e.nightProb;
+                }
+                if (roll < 0) {
+                    set = e.enemyIDs;
+                    break;
+                }
+            }
+        }
 
         int[] setArray = new int[set.size()];
 
@@ -109,10 +123,6 @@ public class Area {
         return bgPath;
     }
 
-    public ArrayList<ArrayList<Integer>> GetEnemySets() {
-        return enemySets;
-    }
-
     public static void InitAreas() {
         FileInputStream f;
         try {
@@ -140,7 +150,6 @@ public class Area {
                 _bg = tokenizer.nextToken();
 
                 table.put(_id, new Area(_name, _icon, _bg));
-
             }
 
             s.close();
@@ -163,6 +172,8 @@ public class Area {
             String line;
 
             int _id;
+            double _day;
+            double _night;
             int _enemyID;
             ArrayList<Integer> _list;
 
@@ -176,13 +187,15 @@ public class Area {
                 StringTokenizer tokenizer = new StringTokenizer(line, " ");
 
                 _id = Integer.parseInt(tokenizer.nextToken());
+                _day = Double.parseDouble(tokenizer.nextToken());
+                _night = Double.parseDouble(tokenizer.nextToken());
                 _list = new ArrayList<Integer>();
                 while (tokenizer.hasMoreTokens()) {
                     _enemyID = Integer.parseInt(tokenizer.nextToken());
                     _list.add(_enemyID);
                 }
 
-                table.get(_id).enemySets.add(_list);
+                table.get(_id).enemySets.add(new EnemySet(_list, _day, _night));
             }
 
             s.close();
@@ -194,6 +207,18 @@ public class Area {
         }
         catch (IOException e) {
             System.out.println("WARNING: File '" + Config.ENEMY_SET_DATA + "' may have been read incorrectly.");
+        }
+    }
+
+    private static class EnemySet {
+        public ArrayList<Integer> enemyIDs;
+        public double             dayProb;
+        public double             nightProb;
+
+        public EnemySet(ArrayList<Integer> _enemyIDs, double _dayProb, double _nightProb) {
+            enemyIDs = _enemyIDs;
+            dayProb = _dayProb;
+            nightProb = _nightProb;
         }
     }
 }

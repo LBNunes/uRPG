@@ -98,6 +98,14 @@ public class Button extends GameObject {
 
     }
 
+    public void Move(int x, int y) {
+        pos.x = x;
+        pos.y = y;
+
+        box.x = x - box.w / 2;
+        box.y = y - box.h / 2;
+    }
+
     public void Hide() {
         visible = false;
         frozen = true;

@@ -96,7 +96,7 @@ public class BattleScene extends GameObjectTreeScene {
                                           new Point(10, 1),
                                           };
 
-    public BattleScene(PlayerData playerData, int area) {
+    public BattleScene(PlayerData playerData, int area, boolean isDay) {
 
         this.playerData = playerData;
 
@@ -119,7 +119,7 @@ public class BattleScene extends GameObjectTreeScene {
             units.add(e);
         }
 
-        int[] enemies = Area.GetEnemySet(area);
+        int[] enemies = Area.GetEnemySet(area, isDay);
 
         // TODO: Calculate jobLevel decently
         for (int i = 0; i < enemyLoc.length && i < enemies.length; ++i) {

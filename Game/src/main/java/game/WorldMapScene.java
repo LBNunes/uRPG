@@ -54,6 +54,8 @@ public class WorldMapScene extends GameScene {
     private String            regionName;
     private ArrayList<Button> areaButtons;
     private ArrayList<Button> cityButtons;
+    private Button            itemsButton;
+    private Button            partyButton;
     private Point[]           locations = { new Point(314, 214),
                                         new Point(620, 592),
                                         new Point(1020, 378),
@@ -92,6 +94,22 @@ public class WorldMapScene extends GameScene {
         playerGold = assets.newText(Config.GOLD_FONT, "");
         playerGold.options(null, Config.GOLD_SIZE, true);
 
+        itemsButton = new Button(
+                                 assets,
+                                 Config.BUTTON_LOOK,
+                                 "Inventory",
+                                 Color.white,
+                                 (int) (Config.SCREEN_WIDTH / 2 + 0.5 * (35 + Config.BUTTON_X_WIDTH)),
+                                 (int) (Config.SCREEN_HEIGHT * 0.95));
+
+        partyButton = new Button(
+                                 assets,
+                                 Config.BUTTON_LOOK,
+                                 "Party",
+                                 Color.white,
+                                 (int) (Config.SCREEN_WIDTH / 2 - 0.5 * (35 + Config.BUTTON_X_WIDTH)),
+                                 (int) (Config.SCREEN_HEIGHT * 0.95));
+
         UpdateGold();
 
         CreateRegion(EnvironmentInformation.GetSSID());
@@ -105,13 +123,24 @@ public class WorldMapScene extends GameScene {
             GameComponents.get(Game.class).quit();
         }
 
-        for (int i = 0; i < areaButtons.size(); ++i) {
-            if (areaButtons.get(i).WasPressed()) {
-                this.frozen = true;
-                this.visible = false;
-                GameComponents.get(Game.class).push(new BattleScene(data, areas[i]));
-            }
+        else if (itemsButton.WasPressed()) {
+            this.frozen = true;
+            GameComponents.get(Game.class).push(new PlayerMenuScene(data, PlayerMenuScene.INVENTORY));
         }
+
+        else if (partyButton.WasPressed()) {
+            this.frozen = true;
+            GameComponents.get(Game.class).push(new PlayerMenuScene(data, PlayerMenuScene.PARTY));
+        }
+
+        else
+            for (int i = 0; i < areaButtons.size(); ++i) {
+                if (areaButtons.get(i).WasPressed()) {
+                    this.frozen = true;
+                    this.visible = false;
+                    GameComponents.get(Game.class).push(new BattleScene(data, areas[i], isDay));
+                }
+            }
     }
 
     @Override
@@ -128,6 +157,9 @@ public class WorldMapScene extends GameScene {
         for (Button b : cityButtons) {
             b.render(renderers);
         }
+
+        itemsButton.render(renderers);
+        partyButton.render(renderers);
 
         goldIcon.render(screen, Config.SCREEN_HEIGHT * 0.02f,
                         Config.SCREEN_HEIGHT * 0.98f, Corner.BOTTOM_LEFT);
@@ -146,6 +178,9 @@ public class WorldMapScene extends GameScene {
         for (Button b : cityButtons) {
             b.Reset();
         }
+
+        itemsButton.Reset();
+        partyButton.Reset();
 
         UpdateGold();
 

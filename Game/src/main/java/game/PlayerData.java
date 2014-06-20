@@ -236,6 +236,18 @@ public class PlayerData {
             return false;
         }
 
+        public int Size() {
+            return itemList.size();
+        }
+
+        public void Swap(int i1, int i2) {
+            IEntry e1 = itemList.get(i1);
+            IEntry e2 = itemList.get(i2);
+
+            itemList.set(i1, e2);
+            itemList.set(i2, e1);
+        }
+
         public static class IEntry {
             public int item;
             public int amount;
