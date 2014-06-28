@@ -97,6 +97,8 @@ public class PlayerData {
                 e.equipment.Set(Integer.parseInt(tokenizer.nextToken()),
                                 Integer.parseInt(tokenizer.nextToken()),
                                 Integer.parseInt(tokenizer.nextToken()));
+                e.RecalculateStats();
+                e.SpendMP(0);
                 data.party.add(e);
             }
 

@@ -59,6 +59,10 @@ public class Gauge {
         this.current = current;
     }
 
+    public void NewMax(int _max) {
+        max = _max;
+    }
+
     public int GetWidth() {
         return body.getWidth();
     }

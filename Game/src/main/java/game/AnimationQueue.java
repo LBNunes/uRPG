@@ -27,10 +27,8 @@
 
 package game;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Queue;
 
 import org.unbiquitous.uImpala.engine.asset.Animation;
 import org.unbiquitous.uImpala.engine.asset.AssetManager;
@@ -42,13 +40,13 @@ import org.unbiquitous.uImpala.util.Corner;
 
 public class AnimationQueue {
 
-    private Queue<ArrayList<AnimQueueData>> queue;
-    private AssetManager                    assets;
-    private Screen                          screen;
+    private ArrayList<ArrayList<AnimQueueData>> queue;
+    private AssetManager                        assets;
+    private Screen                              screen;
 
     public AnimationQueue(AssetManager assets) {
         this.assets = assets;
-        queue = new ArrayDeque<ArrayList<AnimQueueData>>();
+        queue = new ArrayList<ArrayList<AnimQueueData>>();
         screen = GameComponents.get(Screen.class);
     }
 
@@ -62,29 +60,38 @@ public class AnimationQueue {
     }
 
     public void Push(String path, int frames, float fps, Point point) {
-        ArrayList<AnimQueueData> queueTop = queue.peek();
-        if (queueTop == null) {
-            queueTop = new ArrayList<AnimQueueData>();
-            queue.add(queueTop);
+        if (IsEmpty()) {
+            NewGroup();
         }
-        queueTop.add(new QueuedAnimation(assets.newAnimation(path, frames, fps),
-                                         point, 1000 * frames / fps));
+        // Last list
+        ArrayList<AnimQueueData> list = queue.get(queue.size() - 1);
+        list.add(new QueuedAnimation(assets.newAnimation(path, frames, fps),
+                                     point, 1000 * frames / fps));
     }
 
     public void Push(int damage, boolean critical, Color color, Point pos) {
-        ArrayList<AnimQueueData> queueTop = queue.peek();
-        if (queueTop == null) {
-            queueTop = new ArrayList<AnimQueueData>();
-            queue.add(queueTop);
+        if (IsEmpty()) {
+            NewGroup();
         }
-        queueTop.add(new QueuedDamage(new Damage(assets, damage, critical, color), pos));
+        // Last list
+        ArrayList<AnimQueueData> list = queue.get(queue.size() - 1);
+        list.add(new QueuedDamage(new Damage(assets, damage, critical, color), pos));
     }
 
     public void Update() {
-        ArrayList<AnimQueueData> queueTop = queue.peek();
-        if (queueTop == null) {
+        if (queue.size() > 0) {
+            System.out.println("(" + queue.size() + ")");
+            for (ArrayList<AnimQueueData> a : queue) {
+                System.out.print(a.size() + " ");
+            }
+        }
+
+        if (IsEmpty()) {
             return;
         }
+
+        ArrayList<AnimQueueData> queueTop = queue.get(0);
+
         Iterator<AnimQueueData> i = queueTop.iterator();
         while (i.hasNext()) {
             AnimQueueData a = i.next();
@@ -93,15 +100,22 @@ public class AnimationQueue {
             }
         }
         if (queueTop.isEmpty()) {
-            queue.remove();
+            queue.remove(0);
+            if (queue.size() > 0) {
+                ArrayList<AnimQueueData> newQueueTop = queue.get(0);
+                for (AnimQueueData a : newQueueTop) {
+                    a.Reset();
+                }
+            }
         }
     }
 
     public void Render() {
-        ArrayList<AnimQueueData> queueTop = queue.peek();
-        if (queueTop == null) {
+        if (IsEmpty()) {
             return;
         }
+        ArrayList<AnimQueueData> queueTop = queue.get(0);
+
         for (AnimQueueData a : queueTop) {
             a.Render();
         }
@@ -120,6 +134,8 @@ public class AnimationQueue {
         }
 
         public abstract void Render();
+
+        public abstract void Reset();
     }
 
     private class QueuedAnimation extends AnimQueueData {
@@ -133,6 +149,12 @@ public class AnimationQueue {
         @Override
         public void Render() {
             animation.render(screen, position.x, position.y, Corner.CENTER);
+        }
+
+        @Override
+        public void Reset() {
+            animation.setFrame(0);
+            stopwatch.start();
         }
     }
 
@@ -149,6 +171,11 @@ public class AnimationQueue {
         @Override
         public void Render() {
             damage.Render(screen, position.x, (int) (position.y - ((stopwatch.time() / timeLimit) * distance)));
+        }
+
+        @Override
+        public void Reset() {
+            stopwatch.start();
         }
     }
 }

@@ -68,4 +68,8 @@ public class Point {
     public Point Times(float f) {
         return new Point((int) (x * f), (int) (y * f));
     }
+
+    public Point clone() {
+        return new Point(x, y);
+    }
 }

@@ -74,13 +74,17 @@ public class BattleScene extends GameObjectTreeScene {
     private ArrayList<Point>     hexList;
 
     private boolean              quitWarning;
+    private boolean              escKeyPressed;
 
     private Button               moveButton;
     private Button               attackButton;
     private Button               abilityButton;
     private Button               itemButton;
     private Button               endButton;
-    private boolean              escKeyPressed;
+
+    // private AbilityWindow abilityWindow;
+    private ItemWindow           itemWindow;
+    private Item                 selectedItem;
 
     private static final Point[] allyLoc  = { new Point(0, 3),
                                           new Point(0, 2),
@@ -180,6 +184,9 @@ public class BattleScene extends GameObjectTreeScene {
 
         HideActionButtons();
 
+        itemWindow = null;
+        selectedItem = null;
+
         quitWarning = false;
 
         TextLog.instance.SetAssets(assets);
@@ -203,6 +210,10 @@ public class BattleScene extends GameObjectTreeScene {
             e.Update();
         }
 
+        if (itemWindow != null) {
+            itemWindow.update();
+        }
+
         TextLog.instance.Update();
 
         TurnLogic();
@@ -221,6 +232,10 @@ public class BattleScene extends GameObjectTreeScene {
         abilityButton.render(renderers);
         itemButton.render(renderers);
         endButton.render(renderers);
+
+        if (itemWindow != null) {
+            itemWindow.render(renderers);
+        }
 
         TextLog.instance.Render(Config.SCREEN_WIDTH / 2, (int) (0.9 * Config.SCREEN_HEIGHT), Corner.CENTER);
     }
@@ -381,6 +396,17 @@ public class BattleScene extends GameObjectTreeScene {
                 itemButton.Reset();
             }
             else {
+                hexList.clear();
+                ListHexes(currentEntity.pos.x, currentEntity.pos.y, GridArea.CIRCLE, 1);
+                grid.ColorHexes(hexList, HexColors.GREEN, true);
+                grid.ColorArea(currentEntity.pos.x, currentEntity.pos.y, GridArea.SINGLE_HEX, HexColors.BLUE, 0);
+                selectedHex = null;
+                itemWindow = new ItemWindow(assets, "img/window.png", 0, 0, playerData.inventory, false,
+                                            new Predicate<Item>() {
+                                                public boolean Eval(Item a) {
+                                                    return a.IsUsable();
+                                                }
+                                            });
                 currentStage = TurnStage.ITEM_PICK;
                 HideActionButtons();
             }
@@ -426,11 +452,11 @@ public class BattleScene extends GameObjectTreeScene {
                     if (Classes.IsCritical(currentEntity)) {
                         damage *= Config.CRITICAL_FACTOR;
                         animationQueue.Push(damage, true, damage >= 0 ? Color.red : Color.green, damagePos);
-                        PrintDamage(damage, true, currentEntity, target);
+                        PrintAttack(damage, true, currentEntity, target);
                     }
                     else {
                         animationQueue.Push(damage, false, damage >= 0 ? Color.red : Color.green, damagePos);
-                        PrintDamage(damage, false, currentEntity, target);
+                        PrintAttack(damage, false, currentEntity, target);
                     }
 
                     target.Damage(damage);
@@ -459,18 +485,86 @@ public class BattleScene extends GameObjectTreeScene {
 
     private void Stage_AbilityPick() {
         currentStage = TurnStage.CHOOSE_ACTION;
+        abilityButton.Reset();
     }
 
     private void Stage_ActionAbility() {
-
-    }
-
-    private void Stage_ItemPick() {
         currentStage = TurnStage.CHOOSE_ACTION;
     }
 
-    private void Stage_ActionItem() {
+    private void Stage_ItemPick() {
+        selectedItem = itemWindow.GetSelectedItem();
+        if (selectedItem != null) {
+            itemWindow = null;
+            currentStage = TurnStage.ACTION_ITEM;
+            selectedHex = null;
+        }
+        else if (escKeyPressed) {
+            itemWindow = null;
+            ShowActionButtons();
+            grid.ClearColors();
+            grid.ColorArea(currentEntity.pos.x, currentEntity.pos.y, GridArea.SINGLE_HEX, HexColors.BLUE, 0);
+            currentStage = TurnStage.CHOOSE_ACTION;
+        }
+    }
 
+    private void Stage_ActionItem() {
+        if (selectedHex != null) {
+            if (AlreadyListed(selectedHex.x, selectedHex.y)) {
+
+                Entity target = HexOccupied(selectedHex.x, selectedHex.y);
+
+                if (target != null && !target.IsDead() &&
+                    target.playerUnit == currentEntity.playerUnit) {
+
+                    int hp = selectedItem.GetBonusHP();
+                    int mp = selectedItem.GetBonusMP();
+                    Point animPos = grid.FindHexPosition(target.pos.x, target.pos.y);
+                    Point damagePos = animPos.clone();
+                    damagePos.y -= Grid.hexRadius / 2;
+
+                    animationQueue.Push("img/heal.png", 35, 15, animPos);
+
+                    if (hp != 0) {
+                        animationQueue.NewGroup();
+                        animationQueue.Push(hp, false, hp >= 0 ? Color.green : Color.red, damagePos);
+                        PrintItemUse(hp, true, currentEntity, target, selectedItem.GetName());
+                    }
+
+                    if (mp != 0) {
+                        animationQueue.NewGroup();
+                        animationQueue.Push(mp, false, mp >= 0 ? Color.blue : Color.magenta, damagePos);
+                        PrintItemUse(mp, false, currentEntity, target, selectedItem.GetName());
+                    }
+
+                    if (target.IsDead()) {
+                        TextLog.instance.Print(target.name + " has fallen!", target.playerUnit ? Color.red : Color.blue);
+                    }
+
+                    target.Damage(-hp);
+                    target.SpendMP(-mp);
+
+                    hasActed = true;
+                    playerData.inventory.TakeItem(selectedItem.GetID(), 1);
+                    selectedItem = null;
+
+                    grid.ClearColors();
+                    if (!(hasMoved && hasActed)) {
+                        ShowActionButtons();
+                        grid.ColorArea(currentEntity.pos.x, currentEntity.pos.y, GridArea.SINGLE_HEX, HexColors.BLUE, 0);
+                    }
+                    currentStage = TurnStage.PLAY_ANIMATIONS;
+                    nextStage = TurnStage.CHECK_END;
+                }
+            }
+        }
+        else if (escKeyPressed) {
+            selectedItem = null;
+            ShowActionButtons();
+            grid.ClearColors();
+            grid.ColorArea(currentEntity.pos.x, currentEntity.pos.y, GridArea.SINGLE_HEX, HexColors.BLUE, 0);
+            currentStage = TurnStage.CHOOSE_ACTION;
+        }
     }
 
     private void Stage_CheckEnd() {
@@ -663,20 +757,38 @@ public class BattleScene extends GameObjectTreeScene {
         endButton.Show();
     }
 
-    private void PrintDamage(int damage, boolean critical, Entity attacker, Entity target) {
+    private void PrintAttack(int damage, boolean critical, Entity attacker, Entity target) {
         String message = new String();
         message += attacker.name + " the " + attacker.className + " attacks! ";
         if (damage > 0) {
             message += target.name + " the " + target.className + " takes " + damage + " damage";
         }
         else if (damage < 0) {
-            message += target.name + " the " + target.className + " is healed by " + damage + " hitpoints";
+            message += target.name + " the " + target.className + " is healed by " + (-damage) + " hitpoints";
         }
         else {
             message += target.name + " the " + target.className + " takes no damage";
         }
         if (critical) {
             message += "(Critical Hit!)";
+        }
+        TextLog.instance.Print(message, Color.white);
+    }
+
+    private void PrintItemUse(int heal, boolean hpHeal, Entity user, Entity target, String name) {
+        String message = new String();
+        message += user.name + " the " + user.className + " uses one " + name + "! ";
+
+        if (heal < 0) {
+            message += target.name + " the " + target.className + " takes " + (-heal);
+            message += hpHeal ? " damage" : " mana damage";
+        }
+        else if (heal > 0) {
+            message += target.name + " the " + target.className + " recovers " + heal;
+            message += hpHeal ? " hitpoints" : " mana points";
+        }
+        else {
+            message += "Nothing happens.";
         }
         TextLog.instance.Print(message, Color.white);
     }

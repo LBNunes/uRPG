@@ -34,12 +34,16 @@ import org.unbiquitous.uImpala.engine.asset.AssetManager;
 import org.unbiquitous.uImpala.engine.asset.Sprite;
 import org.unbiquitous.uImpala.engine.asset.Text;
 import org.unbiquitous.uImpala.engine.core.GameRenderers;
+import org.unbiquitous.uImpala.engine.io.MouseSource;
 import org.unbiquitous.uImpala.engine.io.Screen;
 import org.unbiquitous.uImpala.util.Corner;
+import org.unbiquitous.uImpala.util.observer.Event;
+import org.unbiquitous.uImpala.util.observer.Observation;
+import org.unbiquitous.uImpala.util.observer.Subject;
 
 public class ItemWindow extends SelectionWindow {
 
-    static final int  WINDOW_WIDTH    = 13;
+    static final int  WINDOW_WIDTH    = 20;
     static final int  WINDOW_HEIGHT   = 22;
     static final int  OPTION_OFFSET_X = 32;
     static final int  OPTION_OFFSET_Y = 32;
@@ -49,16 +53,19 @@ public class ItemWindow extends SelectionWindow {
     public ItemWindow(AssetManager assets, String frame, int x, int y, Inventory list, boolean swappable,
                       Predicate<Item> p) {
         super(assets, frame, x, y, WINDOW_WIDTH, WINDOW_HEIGHT);
-
+        mouse.connect(MouseSource.EVENT_BUTTON_DOWN, new Observation(this, "OnButtonDown"));
+        mouse.connect(MouseSource.EVENT_BUTTON_UP, new Observation(this, "OnButtonUp"));
         this.list = list;
         for (int i = 0; i < list.Size(); ++i) {
             Item item = Item.GetItem(list.itemList.get(i).item);
             if (p.Eval(item)) {
-                options.add(new ItemOption(assets, i, options.size(), x + OPTION_OFFSET_X, y + OPTION_OFFSET_Y,
+                options.add(new ItemOption(assets, options.size(), i, x + OPTION_OFFSET_X,
+                                           y + OPTION_OFFSET_Y,
                                            WINDOW_WIDTH * this.frame.getWidth() / 3 - OPTION_OFFSET_X * 2,
-                                           2 * this.frame.getHeight() / 3,
-                                           swappable, item));
+                                           (int) (1.2 * this.frame.getHeight()),
+                                           swappable, item, list.itemList.get(i).amount));
             }
+
         }
     }
 
@@ -76,8 +83,11 @@ public class ItemWindow extends SelectionWindow {
         o1.originalIndex = o2.originalIndex;
         o2.originalIndex = oindex1;
 
-        options.set(index1, o2);
         options.set(index2, o1);
+        options.set(index1, o2);
+
+        o1.RecalculateBoxes();
+        o2.RecalculateBoxes();
     }
 
     public Item GetSelectedItem() {
@@ -99,6 +109,16 @@ public class ItemWindow extends SelectionWindow {
     protected void destroy() {
     }
 
+    @Override
+    public void OnButtonDown(Event event, Subject subject) {
+        super.OnButtonDown(event, subject);
+    }
+
+    @Override
+    public void OnButtonUp(Event event, Subject subject) {
+        super.OnButtonUp(event, subject);
+    }
+
     private class ItemOption extends Option {
 
         Sprite icon;
@@ -108,13 +128,13 @@ public class ItemWindow extends SelectionWindow {
         Item   item;
 
         public ItemOption(AssetManager assets, int _index, int _originalIndex, int _baseX, int _baseY, int _w, int _h,
-                          boolean _swappable, Item _item) {
+                          boolean _swappable, Item _item, int amount) {
             super(assets, _index, _originalIndex, _baseX, _baseY, _w, _h, _swappable);
 
             item = _item;
 
             if (item.GetSlot() == ItemSlot.NONE) {
-                if (item.IsUseable()) {
+                if (item.IsUsable()) {
                     icon = assets.newSprite("img/potion.png");
                 }
                 else {
@@ -130,16 +150,24 @@ public class ItemWindow extends SelectionWindow {
             else {
                 icon = assets.newSprite("img/extra.png");
             }
-            name = assets.newText("font/seguisb.ttf", item.GetName());
+            name = assets.newText("font/seguisb.ttf", item.GetName() + " (" + amount + ")");
 
             if (item.GetSlot() == ItemSlot.NONE) {
-                stats1 = assets.newText("font/seguisb.ttf", GetLine1(item, true));
+                stats1 = assets.newText("font/seguisb.ttf", GetLine1(item, item.IsUsable()));
                 stats2 = null;
             }
 
             else {
-                stats1 = assets.newText("font/seguisb.ttf", GetLine1(item, false));
-                stats2 = assets.newText("font/seguisb.ttf", GetLine2(item, false));
+                String line1 = GetLine1(item, false);
+                String line2 = GetLine2(item, false);
+                if (!line1.contentEquals("")) {
+                    stats1 = assets.newText("font/seguisb.ttf", line1);
+                    stats2 = assets.newText("font/seguisb.ttf", line2);
+                }
+                else {
+                    stats1 = assets.newText("font/seguisb.ttf", line2);
+                    stats2 = null;
+                }
             }
         }
 
@@ -148,23 +176,21 @@ public class ItemWindow extends SelectionWindow {
             if (swappable) {
                 swapIcon.render(screen, swapBox.x, swapBox.y, Corner.TOP_LEFT);
             }
+            icon.render(screen, (int) (box.x + 0.10 * box.w), box.y + box.h / 2);
             if (stats2 == null) {
-                icon.render(screen, (int) (box.x + 0.10 * box.w), box.y + box.h / 2 - name.getHeight() / 2);
-                name.render(screen, (int) (box.x + 0.10 * box.w + icon.getWidth()),
-                            box.y + box.h / 2 - name.getHeight() / 2);
-                stats1.render(screen, (int) (box.x + 0.10 * box.w + icon.getWidth()),
-                              box.y + box.h / 2 + name.getHeight() / 2);
+                name.render(screen, (int) (box.x + 0.10 * box.w + 40), box.y + box.h / 2 - name.getHeight(),
+                            Corner.TOP_LEFT);
+                stats1.render(screen, (int) (box.x + 0.10 * box.w + 40), box.y + box.h / 2,
+                              Corner.TOP_LEFT);
             }
             else {
-                icon.render(screen, (int) (box.x + 0.10 * box.w), box.y + box.h / 2 - name.getHeight());
-                name.render(screen, (int) (box.x + 0.10 * box.w + icon.getWidth()),
-                            box.y + box.h / 2 - name.getHeight());
-                stats1.render(screen, (int) (box.x + 0.10 * box.w + icon.getWidth()),
-                              box.y + box.h / 2);
-                stats2.render(screen, (int) (box.x + 0.10 * box.w + icon.getWidth()),
-                              box.y + box.h / 2 + name.getHeight());
+                name.render(screen, (int) (box.x + 0.10 * box.w + 40),
+                            box.y + box.h / 2 - (3 * name.getHeight()) / 2, Corner.TOP_LEFT);
+                stats1.render(screen, (int) (box.x + 0.10 * box.w + 40),
+                              box.y + box.h / 2 - name.getHeight() / 2, Corner.TOP_LEFT);
+                stats2.render(screen, (int) (box.x + 0.10 * box.w + 40),
+                              box.y + box.h / 2 + name.getHeight() / 2, Corner.TOP_LEFT);
             }
-
         }
 
         @Override
@@ -180,15 +206,15 @@ public class ItemWindow extends SelectionWindow {
         }
 
         private String GetLine1(Item item, boolean usable) {
-            String line;
+            String line = "";
             if (usable) {
-                if (item.GetBonusHP() > 0 && item.GetBonusMP() > 0) {
+                if (item.GetBonusHP() != 0 && item.GetBonusMP() != 0) {
                     line = item.GetBonusHP() + " HP / " + item.GetBonusMP() + " MP";
                 }
-                else if (item.GetBonusHP() > 0) {
+                else if (item.GetBonusHP() != 0) {
                     line = item.GetBonusHP() + " HP";
                 }
-                else if (item.GetBonusMP() > 0) {
+                else if (item.GetBonusMP() != 0) {
                     line = item.GetBonusMP() + " MP";
                 }
                 else {
@@ -196,16 +222,25 @@ public class ItemWindow extends SelectionWindow {
                 }
             }
             else if (item.GetSlot() != ItemSlot.NONE) {
-                if (item.GetBonusHP() > 0 && item.GetBonusMP() > 0) {
-                    line = item.GetBonusHP() + " HP / " + item.GetBonusMP() + " MP / " + "Range " + item.GetRange();
+                if (item.GetBonusHP() != 0 && item.GetBonusMP() != 0) {
+                    line = item.GetBonusHP() + " HP / " + item.GetBonusMP() + " MP";
+                    if (item.GetRange() != 0) {
+                        line += "/ Range " + item.GetRange();
+                    }
                 }
-                else if (item.GetBonusHP() > 0) {
-                    line = item.GetBonusHP() + " HP / " + "Range " + item.GetRange();
+                else if (item.GetBonusHP() != 0) {
+                    line = item.GetBonusHP() + " HP";
+                    if (item.GetRange() != 0) {
+                        line += "/ Range " + item.GetRange();
+                    }
                 }
-                else if (item.GetBonusMP() > 0) {
-                    line = item.GetBonusMP() + " MP /" + "Range " + item.GetRange();
+                else if (item.GetBonusMP() != 0) {
+                    line = item.GetBonusMP() + " MP";
+                    if (item.GetRange() != 0) {
+                        line += "/ Range " + item.GetRange();
+                    }
                 }
-                else {
+                else if (item.GetRange() != 0) {
                     line = "Range " + item.GetRange();
                 }
             }
@@ -217,49 +252,51 @@ public class ItemWindow extends SelectionWindow {
 
         private String GetLine2(Item item, boolean usable) {
             String line = "";
-            boolean started = false;
+            boolean slash = false;
 
-            if (item.GetBonusAtk() > 0) {
+            if (item.GetBonusAtk() != 0) {
                 line += item.GetBonusAtk() + " Atk";
-                started = true;
+                slash = true;
             }
 
-            if (started) {
-                line += " / ";
-            }
+            if (item.GetBonusDef() != 0) {
 
-            if (item.GetBonusDef() > 0) {
+                if (slash) {
+                    line += " / ";
+                }
                 line += item.GetBonusDef() + " Def";
-                started = true;
+                slash = true;
             }
 
-            if (started) {
-                line += " / ";
-            }
-
-            if (item.GetBonusMag() > 0) {
+            if (item.GetBonusMag() != 0) {
+                if (slash) {
+                    line += " / ";
+                }
                 line += item.GetBonusMag() + " Mag";
-                started = true;
+                slash = true;
             }
 
-            if (started) {
-                line += " / ";
-            }
-
-            if (item.GetBonusRes() > 0) {
+            if (item.GetBonusRes() != 0) {
+                if (slash) {
+                    line += " / ";
+                }
                 line += item.GetBonusRes() + " Res";
-                started = true;
+                slash = true;
             }
 
-            if (started) {
-                line += " / ";
-            }
-
-            if (item.GetBonusSpd() > 0) {
+            if (item.GetBonusSpd() != 0) {
+                if (slash) {
+                    line += " / ";
+                }
                 line += item.GetBonusSpd() + " Spd";
             }
 
             return line;
+        }
+
+        @Override
+        public String toString() {
+            return item.GetName();
         }
     }
 }

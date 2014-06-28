@@ -89,7 +89,7 @@ public class Entity {
 
         moveRange = Classes.GetMoveRange(classID);
 
-        RecalculateStats();
+        CalculateStats();
 
         turnTimer = 0;
 
@@ -123,7 +123,7 @@ public class Entity {
 
         moveRange = Enemies.GetMoveRange(enemyID);
 
-        RecalculateStats();
+        CalculateStats();
 
         turnTimer = 0;
 
@@ -148,7 +148,7 @@ public class Entity {
         description3.setText(currentHP + "/" + stats.HP + " " + currentMP + "/" + stats.MP);
     }
 
-    public void RecalculateStats() {
+    private void CalculateStats() {
         Stats base;
         if (playerUnit) {
             base = Classes.GetBaseStats(classID);
@@ -186,7 +186,15 @@ public class Entity {
                   equipment.Get(ItemSlot.EXTRA).GetBonusSpd();
 
         this.stats = new Stats(HP, MP, atk, def, mag, res, spd);
+    }
 
+    public void RecalculateStats() {
+        CalculateStats();
+        hpGauge.NewMax(stats.HP);
+        mpGauge.NewMax(stats.MP);
+        hpGauge.Update(currentHP);
+        mpGauge.Update(currentMP);
+        description3.setText(currentHP + "/" + stats.HP + " " + currentMP + "/" + stats.MP);
     }
 
     public void Update() {
@@ -245,6 +253,9 @@ public class Entity {
         if (currentHP < 0) {
             currentHP = 0;
         }
+        else if (currentHP > stats.HP) {
+            currentHP = stats.HP;
+        }
 
         hpGauge.Update(currentHP);
         description3.setText(currentHP + "/" + stats.HP + " " + currentMP + "/" + stats.MP);
@@ -254,6 +265,9 @@ public class Entity {
         currentMP -= cost;
         if (currentMP < 0) {
             currentMP = 0;
+        }
+        else if (currentMP > stats.MP) {
+            currentMP = stats.MP;
         }
 
         mpGauge.Update(currentMP);

@@ -7,8 +7,8 @@ MAGE        img/mage.png        2   22  20  5   7   10  10  10  0.10
 CLERIC      img/cleric.png      2   40  30  10  12  15  20  10  0.10
 ARCHMAGE    img/archmage.png    2   25  40  8   10  20  15  11  0.10
 
-ROGUE       img/rogue.png       2   25  12  9   8   6   8   16  0.20
-NINJA       img/ninja.png       3   34  18  18  12  10  12  19  0.30
-HUNTER      img/hunter.png      2   28  15  15  10  10  14  17  0.20
+ROGUE       img/rogue.png       2   25  12  9   8   6   8   13  0.20
+NINJA       img/ninja.png       3   34  18  18  12  10  12  16  0.30
+HUNTER      img/hunter.png      2   28  15  15  10  10  14  14  0.20
 
 NONE        img/none.png        2   0   0   0   0   0   0   0   0.10

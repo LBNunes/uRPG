@@ -125,11 +125,13 @@ public class WorldMapScene extends GameScene {
 
         else if (itemsButton.WasPressed()) {
             this.frozen = true;
+            this.visible = true;
             GameComponents.get(Game.class).push(new PlayerMenuScene(data, PlayerMenuScene.INVENTORY));
         }
 
         else if (partyButton.WasPressed()) {
             this.frozen = true;
+            this.visible = true;
             GameComponents.get(Game.class).push(new PlayerMenuScene(data, PlayerMenuScene.PARTY));
         }
 

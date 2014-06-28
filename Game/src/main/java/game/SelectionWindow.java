@@ -40,7 +40,6 @@ import org.unbiquitous.uImpala.engine.io.MouseSource;
 import org.unbiquitous.uImpala.engine.io.Screen;
 import org.unbiquitous.uImpala.engine.time.Stopwatch;
 import org.unbiquitous.uImpala.util.observer.Event;
-import org.unbiquitous.uImpala.util.observer.Observation;
 import org.unbiquitous.uImpala.util.observer.Subject;
 
 public abstract class SelectionWindow extends GameObject {
@@ -56,9 +55,11 @@ public abstract class SelectionWindow extends GameObject {
     protected int               width;
     protected int               height;
     protected int               scroll;
-    protected boolean           drag;
+    protected boolean           click;
 
     protected Option            selected;
+
+    private int                 lastMouseY;
 
     static final int            MAX_CLICK_TIME = 250;
 
@@ -67,8 +68,7 @@ public abstract class SelectionWindow extends GameObject {
     public SelectionWindow(AssetManager assets, String frame, int x, int y, int width, int height) {
         this.screen = GameComponents.get(Screen.class);
         this.mouse = screen.getMouse();
-        mouse.connect(MouseSource.EVENT_BUTTON_DOWN, new Observation(this, "OnButtonDown"));
-        mouse.connect(MouseSource.EVENT_BUTTON_UP, new Observation(this, "OnButtonUp"));
+        this.options = new ArrayList<Option>();
         this.frame = assets.newSprite(frame);
         this.window = assets.newTileSet(this.frame, 3, 3);
         this.x = x;
@@ -77,19 +77,23 @@ public abstract class SelectionWindow extends GameObject {
         this.height = height;
         this.stopwatch = new Stopwatch();
         this.stopwatch.reset();
-        scroll = 0;
-        drag = false;
+        click = false;
         selected = null;
+        lastMouseY = y;
+        visible = true;
+        frozen = false;
     }
 
     @Override
     public void update() {
-        if (drag) {
-            scroll += mouse.getDeltaY();
+        if (click && !frozen) {
+            int move = (mouse.getY() - lastMouseY) / 2;
             for (Option o : options) {
-                o.Update(scroll);
+                o.Update(move);
+                o.RecalculateBoxes();
             }
         }
+        lastMouseY = mouse.getY();
     }
 
     @Override
@@ -125,37 +129,65 @@ public abstract class SelectionWindow extends GameObject {
             window.render(3, screen, x, y + j * (frame.getHeight() / 3));
             window.render(5, screen, x + ((width - 1) * (frame.getWidth() / 3)),
                           y + j * (frame.getHeight() / 3));
+
         }
     }
 
     public void OnButtonDown(Event event, Subject subject) {
-        stopwatch.start();
-        drag = true;
+        // TODO: Check if click is on window
+        if (!frozen) {
+            stopwatch.start();
+            click = true;
+        }
     }
 
     public void OnButtonUp(Event event, Subject subject) {
-        if (stopwatch.time() < MAX_CLICK_TIME) {
-            MouseEvent e = (MouseEvent) event;
-            int swapRequester = -1;
-            for (int i = 0; i < options.size(); ++i) {
-                Option o = options.get(i);
-                o.CheckClick(e.getX(), e.getY());
-                if (o.requestedSwap) {
-                    if (swapRequester != -1) {
-                        options.get(swapRequester).Reset();
-                        o.Reset();
-                        Swap(swapRequester, i);
+        if (!frozen && click == true) {
+            if (stopwatch.time() < MAX_CLICK_TIME) {
+                MouseEvent e = (MouseEvent) event;
+                int swapRequester = -1;
+
+                for (int i = 0; i < options.size(); ++i) {
+                    Option o = options.get(i);
+                    o.CheckClick(e.getX(), e.getY());
+
+                    if (o.requestedSwap) {
+                        if (swapRequester != -1) {
+                            Option sr = options.get(swapRequester);
+                            Swap(swapRequester, i);
+                            sr.Reset();
+                            sr.RecalculateBoxes();
+                            o.Reset();
+                            o.RecalculateBoxes();
+                        }
+                        else {
+                            swapRequester = i;
+                        }
                     }
-                    else
-                        swapRequester = i;
-                }
-                if (o.selected) {
-                    selected = o;
-                    o.Reset();
+                    if (o.selected) {
+                        selected = o;
+                        o.Reset();
+                    }
                 }
             }
+            click = false;
         }
-        drag = false;
+    }
+
+    public void Reset() {
+        selected = null;
+        frozen = false;
+        for (Option o : options) {
+            o.Reset();
+        }
+    }
+
+    public void Freeze() {
+        frozen = true;
+    }
+
+    public boolean Frozen() {
+        return frozen;
     }
 
     protected static abstract class Option {
@@ -174,13 +206,18 @@ public abstract class SelectionWindow extends GameObject {
         public Sprite  swapIcon;
         public Rect    swapBox;
 
+        public int     scroll;
+
         public abstract void Render(GameRenderers renderers, Screen screen);
 
         public abstract void CheckClick(int x, int y);
 
         public void Update(int scroll) {
-            box.y -= scroll;
-            swapBox.y -= scroll;
+            this.scroll += scroll;
+
+            if (this.scroll > 0) {
+                this.scroll = 0;
+            }
         }
 
         public Option(AssetManager assets, int _index, int _originalIndex, int _baseX, int _baseY, int _w, int _h,
@@ -188,11 +225,14 @@ public abstract class SelectionWindow extends GameObject {
             index = _index;
             originalIndex = _originalIndex;
             swappable = _swappable;
-            box = new Rect(_baseX, _baseY + _index * _h, _w, _h);
             base = new Point(_baseX, _baseY);
 
             swapIcon = assets.newSprite("img/swap.png");
-            swapBox = new Rect((int) (_baseX + _w * 0.80), _baseY + _h / 2,
+
+            scroll = 0;
+
+            box = new Rect(base.x, base.y + scroll + index * _h, _w, _h);
+            swapBox = new Rect((int) (base.x + box.w * 0.80), base.y + scroll + box.h / 5 + box.h * index,
                                swapIcon.getWidth(), swapIcon.getHeight());
         }
 
@@ -202,6 +242,12 @@ public abstract class SelectionWindow extends GameObject {
 
         public boolean Selected() {
             return selected;
+        }
+
+        public void RecalculateBoxes() {
+
+            box.SetXY(base.x, base.y + scroll + index * box.h);
+            swapBox.SetXY((int) (base.x + box.w * 0.80), base.y + scroll + box.h / 5 + box.h * index);
         }
 
         public void Reset() {

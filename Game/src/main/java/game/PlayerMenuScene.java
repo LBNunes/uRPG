@@ -27,21 +27,38 @@
 
 package game;
 
+import game.Item.ItemSlot;
+
 import org.unbiquitous.uImpala.engine.core.Game;
 import org.unbiquitous.uImpala.engine.core.GameComponents;
 import org.unbiquitous.uImpala.engine.core.GameRenderers;
 import org.unbiquitous.uImpala.engine.core.GameScene;
+import org.unbiquitous.uImpala.engine.io.KeyboardEvent;
+import org.unbiquitous.uImpala.engine.io.KeyboardSource;
+import org.unbiquitous.uImpala.engine.io.Screen;
+import org.unbiquitous.uImpala.util.observer.Event;
+import org.unbiquitous.uImpala.util.observer.Observation;
+import org.unbiquitous.uImpala.util.observer.Subject;
 
 public class PlayerMenuScene extends GameScene {
 
     public static final int PARTY     = 1;
     public static final int INVENTORY = 2;
 
+    private Screen          screen;
     private GameRenderers   renderers;
+    private KeyboardSource  keyboard;
     private EntityWindow    party;
     private ItemWindow      items;
+    private PlayerData      data;
 
     public PlayerMenuScene(PlayerData data, int menuType) {
+
+        screen = GameComponents.get(Screen.class);
+        keyboard = screen.getKeyboard();
+        keyboard.connect(KeyboardSource.EVENT_KEY_DOWN, new Observation(this, "OnKeyDown"));
+
+        this.data = data;
 
         if (menuType == INVENTORY) {
             party = null;
@@ -51,6 +68,10 @@ public class PlayerMenuScene extends GameScene {
                                            return true;
                                        }
                                    });
+        }
+        else if (menuType == PARTY) {
+            party = new EntityWindow(assets, "img/window.png", 0, 0, data.party, true, true);
+            items = null;
         }
     }
 
@@ -65,10 +86,43 @@ public class PlayerMenuScene extends GameScene {
         if (items != null) {
             items.update();
         }
+
+        if (party != null) {
+            if (!party.Frozen()) {
+                party.update();
+                if (party.GetSelectedEntity() != null && party.GetSelectedSlot() != ItemSlot.NONE) {
+                    items = new ItemWindow(assets, "img/window.png", 0, 0, data.inventory, false,
+                                           new Predicate<Item>() {
+                                               public boolean Eval(Item a) {
+                                                   return (a.GetSlot() == party.GetSelectedSlot() &&
+                                                   Classes.CanEquip(party.GetSelectedEntity().classID, a));
+                                               }
+                                           });
+                    party.Freeze();
+                }
+            }
+            else {
+                if (items.GetSelectedItem() != null) {
+                    if (party.GetSelectedEntity().equipment.Get(party.GetSelectedSlot()).GetID() != 0) {
+                        data.inventory.AddItem(party.GetSelectedEntity().equipment.Get(party.GetSelectedSlot()).GetID(),
+                                               1);
+                    }
+                    data.inventory.TakeItem(items.GetSelectedItem().GetID(), 1);
+                    party.GetSelectedEntity().equipment.Set(party.GetSelectedSlot(), items.GetSelectedItem().GetID());
+                    party.GetSelectedEntity().RecalculateStats();
+                    items = null;
+                    party.Reset();
+                }
+            }
+        }
     }
 
     @Override
     protected void render() {
+        if (party != null) {
+            party.render(renderers);
+        }
+
         if (items != null) {
             items.render(renderers);
         }
@@ -82,8 +136,22 @@ public class PlayerMenuScene extends GameScene {
 
     @Override
     protected void destroy() {
-        // TODO Auto-generated method stub
 
     }
 
+    public void OnKeyDown(Event event, Subject subject) {
+        if (!frozen) {
+            if (((KeyboardEvent) event).getKey() == 1) {
+                if (party != null && items != null) {
+                    items = null;
+                    party.Reset();
+                }
+                else {
+                    PlayerData.Save(Config.PLAYER_SAVE, data);
+                    frozen = true; // Prevents the pop from being called again if Esc is pressed...
+                    GameComponents.get(Game.class).pop();
+                }
+            }
+        }
+    }
 }

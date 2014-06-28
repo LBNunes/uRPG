@@ -47,4 +47,27 @@ public class Rect {
             return false;
         return true;
     }
+
+    public void Set(Rect r) {
+        x = r.x;
+        y = r.y;
+        w = r.w;
+        h = r.h;
+    }
+
+    public void Set(int _x, int _y, int _w, int _h) {
+        x = _x;
+        y = _y;
+        w = _w;
+        h = _h;
+    }
+
+    public void SetXY(int _x, int _y) {
+        x = _x;
+        y = _y;
+    }
+
+    public Rect clone() {
+        return new Rect(x, y, w, h);
+    }
 }

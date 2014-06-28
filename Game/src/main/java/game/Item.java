@@ -49,7 +49,7 @@ public class Item {
     private String                              name;
     private ItemSlot                            slot;
     private ClassID                             classReq;
-    private boolean                             useable;
+    private boolean                             usable;
     private int                                 range;
     private int                                 bonusHP;
     private int                                 bonusMP;
@@ -79,8 +79,8 @@ public class Item {
         return classReq;
     }
 
-    public boolean IsUseable() {
-        return useable;
+    public boolean IsUsable() {
+        return usable;
     }
 
     public int GetRange() {
@@ -122,7 +122,7 @@ public class Item {
         this.name = name;
         this.slot = slot;
         this.classReq = req;
-        this.useable = useable;
+        this.usable = useable;
         this.range = range;
         this.bonusHP = hp;
         this.bonusMP = mp;

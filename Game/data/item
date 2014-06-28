@@ -18,6 +18,7 @@
 # Usable
 501 Life_Potion         NONE     NONE       1   0   30  0   0   0   0   0   0
 502 Mana_Potion         NONE     NONE       1   0   0   20  0   0   0   0   0
+503 Elixir              NONE     NONE       1   0   100 100 0   0   0   0   0
 
 # Crafting Components
 601 Wood                NONE     NONE       0   0   0   0   0   0   0   0   0
