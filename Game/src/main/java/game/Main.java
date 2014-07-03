@@ -42,8 +42,11 @@ public class Main {
     public static void main(final String[] args) {
         Game.run(new GameSettings() {
             {
+                EnvironmentInformation.Initialize();
                 System.out.println("Running on Windows? " + EnvironmentInformation.IsWindows());
                 System.out.println("Has Battery? " + EnvironmentInformation.HasBattery());
+                System.out.println("Computer Name: " + EnvironmentInformation.GetComputerName());
+                System.out.println(EnvironmentInformation.GetFreeSpacePercentage());
 
                 if (args.length == 2 && args[0].equals("-rp"))
                     put("root_path", args[1]);

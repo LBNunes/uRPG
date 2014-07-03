@@ -79,13 +79,6 @@ public class AnimationQueue {
     }
 
     public void Update() {
-        if (queue.size() > 0) {
-            System.out.println("(" + queue.size() + ")");
-            for (ArrayList<AnimQueueData> a : queue) {
-                System.out.print(a.size() + " ");
-            }
-        }
-
         if (IsEmpty()) {
             return;
         }

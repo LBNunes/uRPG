@@ -32,6 +32,7 @@ import game.Classes.ClassID;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
 import java.util.Set;
@@ -58,9 +59,43 @@ public class Item {
     private int                                 bonusMag;
     private int                                 bonusRes;
     private int                                 bonusSpd;
+    private int                                 rank;
 
     public static Item GetItem(int itemID) {
         return table.get(itemID);
+    }
+
+    public static ArrayList<Item> GetItem(Predicate<Item> p) {
+        ArrayList<Item> a = new ArrayList<Item>();
+
+        Set<Integer> keys = table.keySet();
+        for (int key : keys) {
+            if (p.Eval(table.get(key))) {
+                a.add(table.get(key));
+            }
+        }
+        return a;
+    }
+
+    public static int GetLootOfRank(int rank) {
+
+        ArrayList<Item> list = GetItem(new Predicate<Item>() {
+            public boolean Eval(Item a) {
+                return !a.usable && a.slot == ItemSlot.NONE;
+            }
+        });
+
+        Item selected = null;
+        int deltaRank = 9999999;
+        for (Item it : list) {
+            int itemRank = it.GetRank();
+            if (Math.abs(itemRank - rank) < deltaRank) {
+                deltaRank = Math.abs(itemRank - rank);
+                selected = it;
+            }
+        }
+
+        return selected.GetID();
     }
 
     public int GetID() {
@@ -115,8 +150,12 @@ public class Item {
         return bonusSpd;
     }
 
+    public int GetRank() {
+        return rank;
+    }
+
     protected Item(int id, String name, ItemSlot slot, ClassID req, boolean useable, int range,
-                   int hp, int mp, int atk, int def, int mag, int res, int spd) {
+                   int hp, int mp, int atk, int def, int mag, int res, int spd, int rank) {
 
         this.itemID = id;
         this.name = name;
@@ -154,6 +193,7 @@ public class Item {
             int _mag;
             int _res;
             int _spd;
+            int _rank;
 
             while (s.hasNextLine()) {
                 line = s.nextLine();
@@ -177,8 +217,10 @@ public class Item {
                 _mag = Integer.parseInt(tokenizer.nextToken());
                 _res = Integer.parseInt(tokenizer.nextToken());
                 _spd = Integer.parseInt(tokenizer.nextToken());
+                _rank = Integer.parseInt(tokenizer.nextToken());
 
-                new Item(_id, _name, _slot, _classReq, _useable, _range, _HP, _MP, _atk, _def, _mag, _res, _spd);
+                new Item(_id, _name, _slot, _classReq, _useable, _range,
+                         _HP, _MP, _atk, _def, _mag, _res, _spd, _rank);
             }
 
             s.close();

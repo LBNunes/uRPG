@@ -1,2 +1,25 @@
-# ID NAME           SPRITE                  CLASS      MOVE HP  MP ATK DEF MAG RES SPD
-001 Test_Enemy      img/testenemy.png       WARRIOR     2   10  10  6   6   6   6   6
+# ID NAME           SPRITE                       CLASS      MOVE HP  MP ATK DEF MAG RES SPD  RANK   BOSS    AGGRO
+001 Test_Enemy      img/char/testenemy.png       WARRIOR     2   10  10  6   6   6   6   6    1      0       0.3
+002 Blue_Slime      img/char/slime.png           WARRIOR     1   15   1  12  8   1   8   10   1      0       0.3
+003 Green_Slime     img/char/greenslime.png      WARRIOR     1   15   1  11  8   1   8   11   1      0       0.3
+004 Red_Slime       img/char/redslime.png        WARRIOR     1   18   1  10  8   1   8   11   1      0       0.3
+005 Gray_Slime      img/char/grayslime.png       WARRIOR     1   15   1  11  8   1   8   11   1      0       0.3
+006 Bee             img/char/bee.png             ROGUE       3   25  18  15  10  15  10  12   4      0       0.5
+007 Drone           img/char/drone.png           WARRIOR     3   30  20  18  12  10  14  12   6      0       0.4
+008 Queen_Bee       img/char/queenbee.png        ARCHMAGE    3   80 120  35  25  40  30  13   20     1       0.9
+009 Wolf            img/char/wolf.png            ROGUE       2   30  20  18  15  10  18  12   8      0       0.5
+010 Black_Wolf      img/char/blackwolf.png       PALADIN     2  100  30  40  30  8   28  14   24     1       0.7
+011 Devil_Jr.       img/char/deviljr.png         ROGUE       2   25  20  20  12  15  10  12   8      0       0.5
+012 Devil_Sr.       img/char/devilsr.png         MAGE        2   40  40  20  15  25  25  12   16     0       0.7
+013 Devil_Leader    img/char/devilleader.png     NINJA       3  120 120  40  25  35  20  15   34     1       0.8
+014 Imp             img/char/imp.png             WARRIOR     2   25  15  18  10  10  12  10   6      0       0.4
+015 Great_Imp       img/char/greatimp.png        ROGUE       3   40  25  24  15  15  15  11   12     0       0.5
+016 Gargoyle        img/char/gargoyle.png        HUNTER      3  100  80  38  25  25  30  13   24     1       0.6
+017 Orc             img/char/orc.png             WARRIOR     2   30  10  20  18  5   14  8    6      0       0.3
+018 Orc_Wizard      img/char/orc_wizard.png      MAGE        1   30  40  15  16  28  20  8    14     0       0.7
+019 Orc_Leader      img/char/orc_leader.png      BERSERKER   2  110  40  45  20  20  20  9    28     1       0.5
+020 Snake           img/char/snake.png           WARRIOR     2   25  18  15  12  5   12  10   4      0       0.1
+021 Python          img/char/python.png          MAGE        2   35  40  10  17  22  17  12   8      0       0.8
+022 Queen_Cobra     img/char/queencobra.png      HUNTER      3   90  40  30  25  25  21  15   20     1       0.5
+023 Will-o'-Wisp    img/char/willowisp.png       MAGE        2   10  50   1  35  20  12  12   10     0       0.9
+024 Spirit          img/char/spirit.png          ARCHMAGE    2   20  70   2  40  34  15  12   16     0       0.9

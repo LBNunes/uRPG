@@ -86,8 +86,6 @@ public class Grid extends GameObject {
         ClearColors(HexColors.CLEAR);
 
         screen = GameComponents.get(Screen.class);
-
-        System.out.println("Created Grid.");
     }
 
     public void ClearColors() {

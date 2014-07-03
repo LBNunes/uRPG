@@ -27,6 +27,8 @@
 
 package game;
 
+import game.Classes.ClassID;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -43,12 +45,14 @@ public class Area {
     private String                        name;
     private String                        iconPath;
     private String                        bgPath;
+    private ClassID                       classBias;
     private ArrayList<EnemySet>           enemySets;
 
-    private Area(String _name, String _icon, String _bg) {
+    private Area(String _name, String _icon, String _bg, ClassID _classBias) {
         name = _name;
         iconPath = _icon;
         bgPath = _bg;
+        classBias = _classBias;
         enemySets = new ArrayList<EnemySet>();
     }
 
@@ -56,26 +60,40 @@ public class Area {
         return table.get(id);
     }
 
-    public static int[] GetEnemySet(int id, boolean isDay) {
+    public static int GetNumberOfAreas() {
+        return table.size();
+    }
+
+    public static int[] GetEnemySet(int id, boolean isDay, int rank) {
+
+        final int MAX_SELECTIONS = 5;
 
         ArrayList<EnemySet> list = table.get(id).enemySets;
-        double roll = Math.random();
 
+        ArrayList<EnemySet> selections = new ArrayList<EnemySet>();
         ArrayList<Integer> set = null;
-        while (set == null) {
+
+        for (int i = 0; i < MAX_SELECTIONS; ++i) {
+            EnemySet selected = null;
+            int deltaRank = 9999999;
             for (EnemySet e : list) {
-                if (isDay) {
-                    roll -= e.dayProb;
+                int setRank = 0;
+                for (int enemyID : e.enemyIDs) {
+                    setRank += Enemies.GetEnemy(enemyID).rank;
                 }
-                else {
-                    roll -= e.nightProb;
-                }
-                if (roll < 0) {
-                    set = e.enemyIDs;
-                    break;
+                if (Math.abs(setRank - rank) < deltaRank && isDay == e.appearsDuringDay && !selections.contains(e)) {
+                    deltaRank = Math.abs(setRank - rank);
+                    selected = e;
                 }
             }
+            if (selected != null) {
+                selections.add(selected);
+            }
+            selected = null;
+            deltaRank = 99999999;
         }
+
+        set = selections.get(new Random().nextInt(selections.size())).enemyIDs;
 
         int[] setArray = new int[set.size()];
 
@@ -123,6 +141,10 @@ public class Area {
         return bgPath;
     }
 
+    public ClassID GetClassBias() {
+        return classBias;
+    }
+
     public static void InitAreas() {
         FileInputStream f;
         try {
@@ -134,6 +156,7 @@ public class Area {
             String _name;
             String _icon;
             String _bg;
+            ClassID _classBias;
 
             while (s.hasNextLine()) {
                 line = s.nextLine();
@@ -148,8 +171,9 @@ public class Area {
                 _name = tokenizer.nextToken().replace("_", " ");
                 _icon = tokenizer.nextToken();
                 _bg = tokenizer.nextToken();
+                _classBias = ClassID.valueOf(tokenizer.nextToken());
 
-                table.put(_id, new Area(_name, _icon, _bg));
+                table.put(_id, new Area(_name, _icon, _bg, _classBias));
             }
 
             s.close();
@@ -172,8 +196,7 @@ public class Area {
             String line;
 
             int _id;
-            double _day;
-            double _night;
+            boolean _isDay;
             int _enemyID;
             ArrayList<Integer> _list;
 
@@ -187,15 +210,14 @@ public class Area {
                 StringTokenizer tokenizer = new StringTokenizer(line, " ");
 
                 _id = Integer.parseInt(tokenizer.nextToken());
-                _day = Double.parseDouble(tokenizer.nextToken());
-                _night = Double.parseDouble(tokenizer.nextToken());
+                _isDay = Integer.parseInt(tokenizer.nextToken()) != 0;
                 _list = new ArrayList<Integer>();
                 while (tokenizer.hasMoreTokens()) {
                     _enemyID = Integer.parseInt(tokenizer.nextToken());
                     _list.add(_enemyID);
                 }
 
-                table.get(_id).enemySets.add(new EnemySet(_list, _day, _night));
+                table.get(_id).enemySets.add(new EnemySet(_list, _isDay));
             }
 
             s.close();
@@ -212,13 +234,11 @@ public class Area {
 
     private static class EnemySet {
         public ArrayList<Integer> enemyIDs;
-        public double             dayProb;
-        public double             nightProb;
+        public boolean            appearsDuringDay;
 
-        public EnemySet(ArrayList<Integer> _enemyIDs, double _dayProb, double _nightProb) {
+        public EnemySet(ArrayList<Integer> _enemyIDs, boolean _appearsDuringDay) {
             enemyIDs = _enemyIDs;
-            dayProb = _dayProb;
-            nightProb = _nightProb;
+            appearsDuringDay = _appearsDuringDay;
         }
     }
 }

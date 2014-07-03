@@ -1,14 +1,14 @@
-# CLASS     SPRITE             MOVE HP  MP  ATK DEF MAG RES SPD CRIT%
-WARRIOR     img/warrior.png     2   30  12  10  10  5   6   10  0.10
-PALADIN     img/paladin.png     2   50  24  14  18  10  18  11  0.10
-BERSERKER   img/berserker.png   3   40  20  18  14  10  12  11  0.20
+# CLASS     SPRITE                      MOVE HP  MP  ATK DEF MAG RES SPD CRIT%
+WARRIOR     img/char/warrior.png         2   30  12  10  10  5   6   10  0.10
+PALADIN     img/char/paladin.png         2   50  24  14  18  10  18  11  0.10
+BERSERKER   img/char/berserker.png       3   40  20  18  14  10  12  11  0.20
 
-MAGE        img/mage.png        2   22  20  5   7   10  10  10  0.10
-CLERIC      img/cleric.png      2   40  30  10  12  15  20  10  0.10
-ARCHMAGE    img/archmage.png    2   25  40  8   10  20  15  11  0.10
+MAGE        img/char/mage.png            2   22  20  5   7   10  10  10  0.10
+CLERIC      img/char/cleric.png          2   40  30  10  12  15  20  10  0.10
+ARCHMAGE    img/char/archmage.png        2   25  40  8   10  20  15  11  0.10
 
-ROGUE       img/rogue.png       2   25  12  9   8   6   8   13  0.20
-NINJA       img/ninja.png       3   34  18  18  12  10  12  16  0.30
-HUNTER      img/hunter.png      2   28  15  15  10  10  14  14  0.20
+ROGUE       img/char/rogue.png           2   25  12  9   8   6   8   13  0.20
+NINJA       img/char/ninja.png           3   34  18  18  12  10  12  16  0.30
+HUNTER      img/char/hunter.png          2   28  15  15  10  10  14  14  0.20
 
-NONE        img/none.png        2   0   0   0   0   0   0   0   0.10
+NONE        no_sprite                    2   0   0   0   0   0   0   0   0.10

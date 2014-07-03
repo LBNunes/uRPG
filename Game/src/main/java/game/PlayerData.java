@@ -37,6 +37,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Scanner;
 import java.util.StringTokenizer;
@@ -46,10 +47,11 @@ import org.unbiquitous.uImpala.engine.asset.AssetManager;
 
 public class PlayerData {
 
-    UUID              uuid;
-    int               gold;
-    ArrayList<Entity> party;
-    Inventory         inventory;
+    UUID               uuid;
+    int                gold;
+    ArrayList<Entity>  party;
+    Inventory          inventory;
+    HashSet<KnownCity> knownCities;
 
     // TODO: Energy data
     // TODO: Mission data
@@ -60,6 +62,7 @@ public class PlayerData {
         uuid = null;
         party = new ArrayList<Entity>();
         inventory = new Inventory();
+        knownCities = new HashSet<KnownCity>();
     }
 
     public static PlayerData Load(AssetManager assets, String playerSave) {
@@ -74,10 +77,8 @@ public class PlayerData {
             StringTokenizer tokenizer;
 
             line = s.nextLine();
-            tokenizer = new StringTokenizer(line, " ");
 
-            data.uuid = new UUID(Long.parseLong(tokenizer.nextToken()),
-                                 Long.parseLong(tokenizer.nextToken()));
+            data.uuid = UUID.fromString(line);
 
             line = s.nextLine();
 
@@ -88,7 +89,6 @@ public class PlayerData {
 
             int partySize = Integer.parseInt(tokenizer.nextToken());
 
-            System.out.println(partySize);
             for (int i = 0; i < partySize; ++i) {
                 Entity e = new Entity(assets, tokenizer.nextToken(),
                                       ClassID.valueOf(tokenizer.nextToken()),
@@ -112,6 +112,20 @@ public class PlayerData {
                                        Integer.parseInt(tokenizer.nextToken()));
             }
 
+            line = s.nextLine();
+
+            int nKnownCities = Integer.parseInt(line);
+
+            for (int i = 0; i < nKnownCities; i++) {
+
+                line = s.nextLine();
+                tokenizer = new StringTokenizer(line, " ");
+
+                data.knownCities.add(new KnownCity(UUID.fromString(tokenizer.nextToken()),
+                                                   tokenizer.nextToken(),
+                                                   Long.parseLong(tokenizer.nextToken())));
+            }
+
             s.close();
             f.close();
         }
@@ -132,7 +146,8 @@ public class PlayerData {
         try {
             w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(save),
                                                           "utf-8"));
-            w.write("" + data.uuid.getMostSignificantBits() + " " + data.uuid.getLeastSignificantBits() + '\n');
+            w.write(data.uuid.toString() + '\n');
+
             w.write("" + Integer.toString(data.gold) + "\n");
 
             w.write("" + data.party.size() + " ");
@@ -147,6 +162,14 @@ public class PlayerData {
 
             for (IEntry e : data.inventory.itemList) {
                 w.write("" + e.item + " " + e.amount + " ");
+            }
+
+            w.write("\n");
+
+            w.write("" + data.knownCities.size());
+
+            for (KnownCity c : data.knownCities) {
+                w.write(c.toString() + '\n');
             }
 
             w.write("\n");
@@ -184,6 +207,34 @@ public class PlayerData {
         data.inventory.AddItem(502, 1);
 
         return data;
+    }
+
+    public void DiscoverCity(UUID cityUUID, String cityName) {
+        knownCities.add(new KnownCity(cityUUID, cityName, System.currentTimeMillis()));
+    }
+
+    public static class KnownCity {
+
+        UUID   cityUUID;
+        String cityName;
+        long   timestamp;
+
+        @Override
+        public String toString() {
+            return cityUUID.toString() + " " + cityName.toString() + " " + timestamp;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return cityUUID.equals((((KnownCity) obj).cityUUID));
+        }
+
+        public KnownCity(UUID _cityUUID, String _cityName, long _timestamp) {
+            cityUUID = _cityUUID;
+            cityName = _cityName;
+            timestamp = _timestamp;
+        }
+
     }
 
     public static class Inventory {

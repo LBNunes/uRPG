@@ -223,7 +223,7 @@ public class WorldMapScene extends GameScene {
 
     private void CheckDayNight() {
 
-        isDay = DayNightDetector.IsDay();
+        isDay = EnvironmentInformation.IsDay();
         if (isDay) {
             dayNightIcon = assets.newSprite(Config.DAY_ICON);
         }

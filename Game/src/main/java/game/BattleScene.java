@@ -117,13 +117,16 @@ public class BattleScene extends GameObjectTreeScene {
 
         units = new ArrayList<Entity>();
 
+        int totalLevel = 0;
+
         for (int i = 0; i < allyLoc.length && i < playerData.party.size(); ++i) {
             Entity e = playerData.party.get(i);
+            totalLevel += e.jobLevel;
             e.Move(allyLoc[i].x, allyLoc[i].y);
             units.add(e);
         }
 
-        int[] enemies = Area.GetEnemySet(area, isDay);
+        int[] enemies = Area.GetEnemySet(area, isDay, totalLevel);
 
         // TODO: Calculate jobLevel decently
         for (int i = 0; i < enemyLoc.length && i < enemies.length; ++i) {

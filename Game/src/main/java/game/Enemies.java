@@ -35,12 +35,45 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 public class Enemies {
 
     private static HashMap<Integer, EnemyData> table      = new HashMap<Integer, EnemyData>();
     private static ArrayList<String>           enemyNames = new ArrayList<String>();
+
+    public static EnemyData GetEnemy(int enemyID) {
+        return table.get(enemyID);
+    }
+
+    public static ArrayList<Integer> GetEnemy(Predicate<EnemyData> p) {
+        ArrayList<Integer> a = new ArrayList<Integer>();
+
+        Set<Integer> keys = table.keySet();
+        for (int key : keys) {
+            if (p.Eval(table.get(key))) {
+                a.add(key);
+            }
+        }
+        return a;
+    }
+
+    public static int GetEnemyOfRank(int rank, boolean boss) {
+
+        int selected = 1;
+        int deltaRank = 9999999;
+        Set<Integer> keys = table.keySet();
+        for (int key : keys) {
+            int enemyRank = table.get(key).rank;
+            boolean isBoss = table.get(key).boss;
+            if (Math.abs(enemyRank - rank) < deltaRank && isBoss == boss) {
+                deltaRank = Math.abs(enemyRank - rank);
+                selected = key;
+            }
+        }
+        return selected;
+    }
 
     public static Stats GetBaseStats(int enemyID) {
         return table.get(enemyID).stats;
@@ -90,6 +123,9 @@ public class Enemies {
             int _mag;
             int _res;
             int _spd;
+            int _rank;
+            boolean _boss;
+            float _aggro;
 
             while (s.hasNextLine()) {
                 line = s.nextLine();
@@ -112,8 +148,13 @@ public class Enemies {
                 _mag = Integer.parseInt(tokenizer.nextToken());
                 _res = Integer.parseInt(tokenizer.nextToken());
                 _spd = Integer.parseInt(tokenizer.nextToken());
+                _rank = Integer.parseInt(tokenizer.nextToken());
+                _boss = Integer.parseInt(tokenizer.nextToken()) != 0;
+                _aggro = Float.parseFloat(tokenizer.nextToken());
 
-                table.put(_id, new EnemyData(_type, _sprite, _class, _move, _HP, _MP, _atk, _def, _mag, _res, _spd));
+                table.put(_id, new EnemyData(_type, _sprite, _class, _move,
+                                             _HP, _MP, _atk, _def, _mag, _res, _spd,
+                                             _rank, _boss, _aggro));
             }
 
             s.close();
@@ -163,20 +204,27 @@ public class Enemies {
         }
     }
 
-    private static class EnemyData {
+    public static class EnemyData {
         public String  type;
         public String  sprite;
         public ClassID classID;
         public int     moveRange;
         public Stats   stats;
+        public int     rank;
+        public boolean boss;
+        public float   aggro;
 
         public EnemyData(String _type, String _sprite, ClassID _classID, int _moveRange,
-                         int _HP, int _MP, int _atk, int _def, int _mag, int _res, int _spd) {
+                         int _HP, int _MP, int _atk, int _def, int _mag, int _res, int _spd,
+                         int _rank, boolean _boss, float _aggro) {
             type = _type;
             sprite = _sprite;
             classID = _classID;
             moveRange = _moveRange;
             stats = new Stats(_HP, _MP, _atk, _def, _mag, _res, _spd);
+            rank = _rank;
+            boss = _boss;
+            aggro = _aggro;
         }
     }
 }
