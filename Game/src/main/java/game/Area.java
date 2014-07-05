@@ -66,7 +66,7 @@ public class Area {
 
     public static int[] GetEnemySet(int id, boolean isDay, int rank) {
 
-        final int MAX_SELECTIONS = 5;
+        final int MAX_SELECTIONS = 3;
 
         ArrayList<EnemySet> list = table.get(id).enemySets;
 
@@ -79,7 +79,7 @@ public class Area {
             for (EnemySet e : list) {
                 int setRank = 0;
                 for (int enemyID : e.enemyIDs) {
-                    setRank += Enemies.GetEnemy(enemyID).rank;
+                    setRank += Enemy.GetEnemy(enemyID).rank;
                 }
                 if (Math.abs(setRank - rank) < deltaRank && isDay == e.appearsDuringDay && !selections.contains(e)) {
                     deltaRank = Math.abs(setRank - rank);

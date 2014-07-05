@@ -72,4 +72,10 @@ public class Point {
     public Point clone() {
         return new Point(x, y);
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        Point p = (Point) obj;
+        return x == p.x && y == p.y;
+    }
 }

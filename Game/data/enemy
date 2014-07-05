@@ -21,5 +21,5 @@
 020 Snake           img/char/snake.png           WARRIOR     2   25  18  15  12  5   12  10   4      0       0.1
 021 Python          img/char/python.png          MAGE        2   35  40  10  17  22  17  12   8      0       0.8
 022 Queen_Cobra     img/char/queencobra.png      HUNTER      3   90  40  30  25  25  21  15   20     1       0.5
-023 Will-o'-Wisp    img/char/willowisp.png       MAGE        2   10  50   1  35  20  12  12   10     0       0.9
-024 Spirit          img/char/spirit.png          ARCHMAGE    2   20  70   2  40  34  15  12   16     0       0.9
+023 Will-o'-Wisp    img/char/willowisp.png       MAGE        2   10  50   1  35  20  12  12   6      0       0.9
+024 Spirit          img/char/spirit.png          ARCHMAGE    2   20  70   2  40  34  15  12   12     0       0.9

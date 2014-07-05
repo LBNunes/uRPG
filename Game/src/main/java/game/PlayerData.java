@@ -49,19 +49,18 @@ public class PlayerData {
 
     UUID               uuid;
     int                gold;
+    int                energy;
+    long               lastRefresh;
     ArrayList<Entity>  party;
     Inventory          inventory;
+    ArrayList<Mission> missions;
     HashSet<KnownCity> knownCities;
-
-    // TODO: Energy data
-    // TODO: Mission data
-    // TODO: Mission time
-    // TODO: Entity Ability data
 
     public PlayerData() {
         uuid = null;
         party = new ArrayList<Entity>();
         inventory = new Inventory();
+        missions = new ArrayList<Mission>();
         knownCities = new HashSet<KnownCity>();
     }
 
@@ -81,8 +80,20 @@ public class PlayerData {
             data.uuid = UUID.fromString(line);
 
             line = s.nextLine();
+            tokenizer = new StringTokenizer(line, " ");
 
-            data.gold = Integer.parseInt(line);
+            data.gold = Integer.parseInt(tokenizer.nextToken());
+            data.energy = Integer.parseInt(tokenizer.nextToken());
+            data.lastRefresh = Long.parseLong(tokenizer.nextToken());
+
+            int maxEnergy = (int) (Config.BASE_ENERGY * EnvironmentInformation.GetFreeSpacePercentage());
+            if (maxEnergy < 200) {
+                maxEnergy = 200;
+            }
+
+            if (data.energy > Config.BASE_ENERGY * EnvironmentInformation.GetFreeSpacePercentage()) {
+                data.energy = maxEnergy;
+            }
 
             line = s.nextLine();
             tokenizer = new StringTokenizer(line, " ");
@@ -90,6 +101,10 @@ public class PlayerData {
             int partySize = Integer.parseInt(tokenizer.nextToken());
 
             for (int i = 0; i < partySize; ++i) {
+
+                line = s.nextLine();
+                tokenizer = new StringTokenizer(line, " ");
+
                 Entity e = new Entity(assets, tokenizer.nextToken(),
                                       ClassID.valueOf(tokenizer.nextToken()),
                                       Integer.parseInt(tokenizer.nextToken()));
@@ -99,6 +114,13 @@ public class PlayerData {
                                 Integer.parseInt(tokenizer.nextToken()));
                 e.RecalculateStats();
                 e.SpendMP(0);
+
+                int nAbilities = Integer.parseInt(tokenizer.nextToken());
+
+                for (int j = 0; j < nAbilities; ++j) {
+                    e.abilities.add(Ability.GetAbility(Integer.parseInt(tokenizer.nextToken())));
+                }
+
                 data.party.add(e);
             }
 
@@ -110,6 +132,15 @@ public class PlayerData {
             for (int i = 0; i < inventorySize; ++i) {
                 data.inventory.AddItem(Integer.parseInt(tokenizer.nextToken()),
                                        Integer.parseInt(tokenizer.nextToken()));
+            }
+
+            line = s.nextLine();
+
+            int nMissions = Integer.parseInt(line);
+
+            for (int i = 0; i < nMissions; ++i) {
+                line = s.nextLine();
+                data.missions.add(Mission.FromString(line));
             }
 
             line = s.nextLine();
@@ -148,11 +179,12 @@ public class PlayerData {
                                                           "utf-8"));
             w.write(data.uuid.toString() + '\n');
 
-            w.write("" + Integer.toString(data.gold) + "\n");
+            w.write("" + data.gold + " " + data.energy + " " + data.lastRefresh + "\n");
 
-            w.write("" + data.party.size() + " ");
+            w.write("" + data.party.size());
 
             for (Entity e : data.party) {
+                w.write("\n");
                 WriteEntity(w, e);
             }
 
@@ -165,6 +197,12 @@ public class PlayerData {
             }
 
             w.write("\n");
+
+            w.write("" + data.missions.size() + "\n");
+
+            for (Mission m : data.missions) {
+                w.write(m.toString() + '\n');
+            }
 
             w.write("" + data.knownCities.size());
 
@@ -181,9 +219,15 @@ public class PlayerData {
     }
 
     private static void WriteEntity(BufferedWriter w, Entity e) throws IOException {
+
         w.write("" + e.name + " ");
         w.write("" + e.classID + " " + e.jobLevel + " " + e.jobExp + " ");
         w.write("" + e.equipment.toString() + " ");
+        w.write("" + e.abilities.size());
+
+        for (Ability a : e.abilities) {
+            w.write(" " + a.id);
+        }
     }
 
     private static PlayerData CreateNew(AssetManager assets) {
@@ -193,10 +237,13 @@ public class PlayerData {
         data.uuid = UUID.randomUUID();
 
         data.gold = 0;
+        data.energy = (int) (Config.BASE_ENERGY * EnvironmentInformation.GetFreeSpacePercentage());
+        data.lastRefresh = System.currentTimeMillis();
 
         Entity warrior = new Entity(assets, Entity.GetRandomName(), ClassID.WARRIOR, 1);
         Entity rogue = new Entity(assets, Entity.GetRandomName(), ClassID.ROGUE, 1);
         Entity mage = new Entity(assets, Entity.GetRandomName(), ClassID.MAGE, 1);
+        mage.abilities.add(Ability.GetAbility(001));
 
         data.party.add(warrior);
         data.party.add(rogue);

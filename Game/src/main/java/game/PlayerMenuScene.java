@@ -44,6 +44,7 @@ public class PlayerMenuScene extends GameScene {
 
     public static final int PARTY     = 1;
     public static final int INVENTORY = 2;
+    public static final int MISSIONS  = 3;
 
     private Screen          screen;
     private GameRenderers   renderers;

@@ -30,7 +30,6 @@ package game;
 import game.Classes.ClassID;
 import game.Mission.FetchMission;
 import game.Mission.KillMission;
-import game.Mission.Objective;
 import game.Mission.VisitAreaMission;
 import game.Mission.VisitCityMission;
 import game.PlayerData.KnownCity;
@@ -111,58 +110,7 @@ public class CityData {
 
             for (int i = 0; i < nMissions; ++i) {
                 line = s.nextLine();
-                tokenizer = new StringTokenizer(line, " ");
-                Objective o = Objective.valueOf(tokenizer.nextToken());
-                Mission m = null;
-                switch (o) {
-                    case KILL:
-                        m = KillMission.Restore(UUID.fromString(tokenizer.nextToken()),
-                                                UUID.fromString(tokenizer.nextToken()),
-                                                tokenizer.nextToken(),
-                                                Integer.parseInt(tokenizer.nextToken()),
-                                                Long.parseLong(tokenizer.nextToken()),
-                                                Integer.parseInt(tokenizer.nextToken()),
-                                                Integer.parseInt(tokenizer.nextToken()) != 0,
-                                                Integer.parseInt(tokenizer.nextToken()) != 0,
-                                                Integer.parseInt(tokenizer.nextToken()),
-                                                Integer.parseInt(tokenizer.nextToken()));
-                        break;
-                    case VISIT_AREA:
-                        m = VisitAreaMission.Restore(UUID.fromString(tokenizer.nextToken()),
-                                                     UUID.fromString(tokenizer.nextToken()),
-                                                     tokenizer.nextToken(),
-                                                     Integer.parseInt(tokenizer.nextToken()),
-                                                     Long.parseLong(tokenizer.nextToken()),
-                                                     Integer.parseInt(tokenizer.nextToken()),
-                                                     Integer.parseInt(tokenizer.nextToken()) != 0,
-                                                     Integer.parseInt(tokenizer.nextToken()) != 0,
-                                                     Integer.parseInt(tokenizer.nextToken()));
-                        break;
-                    case VISIT_CITY:
-                        m = VisitCityMission.Restore(UUID.fromString(tokenizer.nextToken()),
-                                                     UUID.fromString(tokenizer.nextToken()),
-                                                     tokenizer.nextToken(),
-                                                     Integer.parseInt(tokenizer.nextToken()),
-                                                     Long.parseLong(tokenizer.nextToken()),
-                                                     Integer.parseInt(tokenizer.nextToken()),
-                                                     Integer.parseInt(tokenizer.nextToken()) != 0,
-                                                     Integer.parseInt(tokenizer.nextToken()) != 0,
-                                                     UUID.fromString(tokenizer.nextToken()),
-                                                     tokenizer.nextToken());
-                        break;
-                    case FETCH:
-                        m = FetchMission.Restore(UUID.fromString(tokenizer.nextToken()),
-                                                 UUID.fromString(tokenizer.nextToken()),
-                                                 tokenizer.nextToken(),
-                                                 Integer.parseInt(tokenizer.nextToken()),
-                                                 Long.parseLong(tokenizer.nextToken()),
-                                                 Integer.parseInt(tokenizer.nextToken()),
-                                                 Integer.parseInt(tokenizer.nextToken()) != 0,
-                                                 Integer.parseInt(tokenizer.nextToken()) != 0,
-                                                 Integer.parseInt(tokenizer.nextToken()));
-                        break;
-                }
-                data.guildMissions.add(m);
+                data.guildMissions.add(Mission.FromString(line));
             }
 
             line = s.nextLine();
@@ -319,21 +267,22 @@ public class CityData {
 
         else {
             for (PlayerVisit v : playerVisits) {
-                rank += v.averageLevel;
+                if (v.averageLevel > rank) {
+                    rank = v.averageLevel;
+                }
             }
-            rank /= playerVisits.size();
         }
 
         if (knownCities.size() > 0) {
             guildMissions.add(GenerateVisitCityMission());
         }
         else {
-            guildMissions.add(GenerateFetchMission(rand.nextInt(rank + 1)));
+            guildMissions.add(GenerateFetchMission(rand.nextInt(rank) + 1));
         }
         guildMissions.add(GenerateVisitAreaMission());
-        guildMissions.add(GenerateFetchMission(rand.nextInt(rank + 1)));
-        guildMissions.add(GenerateKillMission(rand.nextInt(rank + 1)));
-        guildMissions.add(GenerateKillMission(rand.nextInt(rank + 1)));
+        guildMissions.add(GenerateFetchMission(rand.nextInt(rank) + 1));
+        guildMissions.add(GenerateKillMission(rand.nextInt(rank) + 1));
+        guildMissions.add(GenerateKillMission(rand.nextInt(rank) + 1));
 
     }
 
@@ -347,11 +296,11 @@ public class CityData {
             boss = false;
         }
 
-        int enemy = Enemies.GetEnemyOfRank(rank, boss);
+        int enemy = Enemy.GetEnemyOfRank(rank * 2, boss);
         int amount = 5 + new Random().nextInt(4);
         int reward = 100 + rank * 30 + amount * 10;
 
-        return new KillMission(uuid, name, reward, rank, enemy, amount);
+        return new KillMission(uuid, "The City of " + name, reward, rank, enemy, amount);
     }
 
     private Mission GenerateVisitAreaMission() {
@@ -363,11 +312,11 @@ public class CityData {
 
         if (areas.length >= Area.GetNumberOfAreas()) {
             area = areas[rand.nextInt(areas.length)];
-            return new VisitAreaMission(uuid, name, AREA_MISSION_REWARD / 2, 1, area);
+            return new VisitAreaMission(uuid, "The City of " + name, AREA_MISSION_REWARD / 2, 1, area);
         }
         else {
             while (true) {
-                area = rand.nextInt(Area.GetNumberOfAreas());
+                area = rand.nextInt(Area.GetNumberOfAreas() + 1);
                 if (area == areas[0] || area == areas[1] || area == areas[2]) {
                     continue;
                 }
@@ -377,7 +326,7 @@ public class CityData {
                 break;
             }
         }
-        return new VisitAreaMission(uuid, name, AREA_MISSION_REWARD, 1, area);
+        return new VisitAreaMission(uuid, "The City of " + name, AREA_MISSION_REWARD, 1, area);
     }
 
     private Mission GenerateVisitCityMission() {
@@ -396,7 +345,7 @@ public class CityData {
             i += 1;
         }
 
-        return new VisitCityMission(uuid, name, VISIT_CITY_REWARD, 1, c.cityUUID, c.cityName);
+        return new VisitCityMission(uuid, "The City of " + name, VISIT_CITY_REWARD, 1, c.cityUUID, c.cityName);
     }
 
     private Mission GenerateFetchMission(int rank) {
@@ -404,7 +353,7 @@ public class CityData {
         int item = Item.GetLootOfRank(rank);
         int reward = 100 + 20 * rank;
 
-        return new FetchMission(uuid, name, reward, rank, item);
+        return new FetchMission(uuid, "The City of " + name, reward, rank, item);
 
     }
 
@@ -438,11 +387,11 @@ public class CityData {
         }
 
         if (nEthers > 0) {
-            marketTransactions.add(new Transaction(this.uuid, 502, nEthers, etherPrice));
+            marketTransactions.add(new Transaction(this.uuid, 541, nEthers, etherPrice));
         }
 
         if (nElixirs > 0) {
-            marketTransactions.add(new Transaction(this.uuid, 503, nElixirs, elixirPrice));
+            marketTransactions.add(new Transaction(this.uuid, 581, nElixirs, elixirPrice));
         }
 
         if (nWarrior > 0) {
@@ -489,7 +438,7 @@ public class CityData {
         rank /= 2;
 
         for (int i = 0; i < N_RECRUITS; ++i) {
-            recruits.add(new Entity(assets, Entity.GetRandomName(), academyClass, rand.nextInt(rank)));
+            recruits.add(new Entity(assets, Entity.GetRandomName(), academyClass, rand.nextInt(rank) + 1));
         }
     }
 

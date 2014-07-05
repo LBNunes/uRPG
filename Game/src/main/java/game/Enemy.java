@@ -38,16 +38,40 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-public class Enemies {
+public class Enemy {
 
-    private static HashMap<Integer, EnemyData> table      = new HashMap<Integer, EnemyData>();
-    private static ArrayList<String>           enemyNames = new ArrayList<String>();
+    private static HashMap<Integer, Enemy> table      = new HashMap<Integer, Enemy>();
+    private static ArrayList<String>       enemyNames = new ArrayList<String>();
 
-    public static EnemyData GetEnemy(int enemyID) {
+    public String                          type;
+    public String                          sprite;
+    public ClassID                         classID;
+    public int                             moveRange;
+    public Stats                           stats;
+    public int                             rank;
+    public boolean                         boss;
+    public float                           aggro;
+    public ArrayList<Loot>                 possibleLoot;
+
+    private Enemy(String _type, String _sprite, ClassID _classID, int _moveRange,
+                  int _HP, int _MP, int _atk, int _def, int _mag, int _res, int _spd,
+                  int _rank, boolean _boss, float _aggro) {
+        type = _type;
+        sprite = _sprite;
+        classID = _classID;
+        moveRange = _moveRange;
+        stats = new Stats(_HP, _MP, _atk, _def, _mag, _res, _spd);
+        rank = _rank;
+        boss = _boss;
+        aggro = _aggro;
+        possibleLoot = new ArrayList<Loot>();
+    }
+
+    public static Enemy GetEnemy(int enemyID) {
         return table.get(enemyID);
     }
 
-    public static ArrayList<Integer> GetEnemy(Predicate<EnemyData> p) {
+    public static ArrayList<Integer> GetEnemy(Predicate<Enemy> p) {
         ArrayList<Integer> a = new ArrayList<Integer>();
 
         Set<Integer> keys = table.keySet();
@@ -75,6 +99,22 @@ public class Enemies {
         return selected;
     }
 
+    public static ArrayList<Item> GetLoot(int enemyID, int battleRank) {
+        ArrayList<Item> loot = new ArrayList<Item>();
+        Enemy e = table.get(enemyID);
+
+        for (Loot l : e.possibleLoot) {
+            if (Math.random() < l.probability) {
+                Item item = Item.GetItem(l.itemID);
+                if (item.GetRank() >= battleRank) {
+                    loot.add(item);
+                }
+            }
+        }
+
+        return loot;
+    }
+
     public static Stats GetBaseStats(int enemyID) {
         return table.get(enemyID).stats;
     }
@@ -97,11 +137,6 @@ public class Enemies {
 
     public static int GetMoveRange(int enemyID) {
         return table.get(enemyID).moveRange;
-    }
-
-    public static EquipSet GetEquipment(int jobLevel) {
-        // TODO Auto-generated method stub
-        return new EquipSet(0, 0, 0);
     }
 
     public static void InitTable() {
@@ -152,9 +187,9 @@ public class Enemies {
                 _boss = Integer.parseInt(tokenizer.nextToken()) != 0;
                 _aggro = Float.parseFloat(tokenizer.nextToken());
 
-                table.put(_id, new EnemyData(_type, _sprite, _class, _move,
-                                             _HP, _MP, _atk, _def, _mag, _res, _spd,
-                                             _rank, _boss, _aggro));
+                table.put(_id, new Enemy(_type, _sprite, _class, _move,
+                                         _HP, _MP, _atk, _def, _mag, _res, _spd,
+                                         _rank, _boss, _aggro));
             }
 
             s.close();
@@ -204,27 +239,54 @@ public class Enemies {
         }
     }
 
-    public static class EnemyData {
-        public String  type;
-        public String  sprite;
-        public ClassID classID;
-        public int     moveRange;
-        public Stats   stats;
-        public int     rank;
-        public boolean boss;
-        public float   aggro;
+    public static void InitLoot() {
+        FileInputStream f;
+        try {
+            f = new FileInputStream(Config.LOOT_DATA);
+            Scanner s = new Scanner(f);
+            String line;
 
-        public EnemyData(String _type, String _sprite, ClassID _classID, int _moveRange,
-                         int _HP, int _MP, int _atk, int _def, int _mag, int _res, int _spd,
-                         int _rank, boolean _boss, float _aggro) {
-            type = _type;
-            sprite = _sprite;
-            classID = _classID;
-            moveRange = _moveRange;
-            stats = new Stats(_HP, _MP, _atk, _def, _mag, _res, _spd);
-            rank = _rank;
-            boss = _boss;
-            aggro = _aggro;
+            int _itemID;
+            int _enemy;
+            float _prob;
+
+            while (s.hasNextLine()) {
+                line = s.nextLine();
+
+                if (line.length() == 0 || line.charAt(0) == '#') {
+                    continue;
+                }
+
+                StringTokenizer tokenizer = new StringTokenizer(line, " ");
+
+                _itemID = Integer.parseInt(tokenizer.nextToken());
+
+                while (tokenizer.hasMoreTokens()) {
+                    _enemy = Integer.parseInt(tokenizer.nextToken());
+                    _prob = Float.parseFloat(tokenizer.nextToken());
+                    GetEnemy(_enemy).possibleLoot.add(new Loot(_itemID, _prob));
+                }
+            }
+
+            s.close();
+            f.close();
+        }
+        catch (FileNotFoundException e) {
+            System.out.println("FATAL ERROR: File '" + Config.LOOT_DATA + "' was not found!");
+            System.exit(1);
+        }
+        catch (IOException e) {
+            System.out.println("WARNING: File '" + Config.LOOT_DATA + "' may have been read incorrectly.");
+        }
+    }
+
+    private static class Loot {
+        public int   itemID;
+        public float probability;
+
+        public Loot(int _itemID, float _probability) {
+            itemID = _itemID;
+            probability = _probability;
         }
     }
 }

@@ -132,14 +132,18 @@ public class EntityWindow extends SelectionWindow {
         Sprite   weaponIcon;
         Sprite   armorIcon;
         Sprite   extraIcon;
+
         Rect     weaponBox;
         Rect     armorBox;
         Rect     extraBox;
+
         Text     name;
         Text     stats1;
         Text     stats2;
+
         Entity   entity;
         ItemSlot slot;
+
         boolean  equippable;
 
         public EntityOption(AssetManager assets, int _index, int _originalIndex, int _baseX, int _baseY, int _w,

@@ -27,6 +27,7 @@
 
 package game;
 
+import java.util.StringTokenizer;
 import java.util.UUID;
 
 public abstract class Mission {
@@ -76,6 +77,61 @@ public abstract class Mission {
         rank = _rank;
         completed = _completed;
         handedOut = _handedOut;
+    }
+
+    public static Mission FromString(String line) {
+        StringTokenizer tokenizer = new StringTokenizer(line, " ");
+        Objective o = Objective.valueOf(tokenizer.nextToken());
+        Mission m = null;
+        switch (o) {
+            case KILL:
+                m = KillMission.Restore(UUID.fromString(tokenizer.nextToken()),
+                                        UUID.fromString(tokenizer.nextToken()),
+                                        tokenizer.nextToken(),
+                                        Integer.parseInt(tokenizer.nextToken()),
+                                        Long.parseLong(tokenizer.nextToken()),
+                                        Integer.parseInt(tokenizer.nextToken()),
+                                        Integer.parseInt(tokenizer.nextToken()) != 0,
+                                        Integer.parseInt(tokenizer.nextToken()) != 0,
+                                        Integer.parseInt(tokenizer.nextToken()),
+                                        Integer.parseInt(tokenizer.nextToken()));
+                break;
+            case VISIT_AREA:
+                m = VisitAreaMission.Restore(UUID.fromString(tokenizer.nextToken()),
+                                             UUID.fromString(tokenizer.nextToken()),
+                                             tokenizer.nextToken(),
+                                             Integer.parseInt(tokenizer.nextToken()),
+                                             Long.parseLong(tokenizer.nextToken()),
+                                             Integer.parseInt(tokenizer.nextToken()),
+                                             Integer.parseInt(tokenizer.nextToken()) != 0,
+                                             Integer.parseInt(tokenizer.nextToken()) != 0,
+                                             Integer.parseInt(tokenizer.nextToken()));
+                break;
+            case VISIT_CITY:
+                m = VisitCityMission.Restore(UUID.fromString(tokenizer.nextToken()),
+                                             UUID.fromString(tokenizer.nextToken()),
+                                             tokenizer.nextToken(),
+                                             Integer.parseInt(tokenizer.nextToken()),
+                                             Long.parseLong(tokenizer.nextToken()),
+                                             Integer.parseInt(tokenizer.nextToken()),
+                                             Integer.parseInt(tokenizer.nextToken()) != 0,
+                                             Integer.parseInt(tokenizer.nextToken()) != 0,
+                                             UUID.fromString(tokenizer.nextToken()),
+                                             tokenizer.nextToken());
+                break;
+            case FETCH:
+                m = FetchMission.Restore(UUID.fromString(tokenizer.nextToken()),
+                                         UUID.fromString(tokenizer.nextToken()),
+                                         tokenizer.nextToken(),
+                                         Integer.parseInt(tokenizer.nextToken()),
+                                         Long.parseLong(tokenizer.nextToken()),
+                                         Integer.parseInt(tokenizer.nextToken()),
+                                         Integer.parseInt(tokenizer.nextToken()) != 0,
+                                         Integer.parseInt(tokenizer.nextToken()) != 0,
+                                         Integer.parseInt(tokenizer.nextToken()));
+                break;
+        }
+        return m;
     }
 
     public static class KillMission extends Mission {

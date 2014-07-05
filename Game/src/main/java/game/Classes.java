@@ -27,6 +27,7 @@
 
 package game;
 
+import game.Ability.DamageType;
 import game.Item.ItemSlot;
 
 import java.io.FileInputStream;
@@ -87,7 +88,11 @@ public class Classes {
         if (item.GetSlot() == ItemSlot.NONE)
             return false;
 
-        switch (item.GetClassRequirement()) {
+        return IsClassCompatible(charClass, item.GetClassRequirement());
+    }
+
+    public static boolean IsClassCompatible(ClassID charClass, ClassID desiredClass) {
+        switch (desiredClass) {
             case WARRIOR:
                 return charClass == ClassID.WARRIOR ||
                        charClass == ClassID.PALADIN ||
@@ -124,7 +129,7 @@ public class Classes {
         return critFactor < Math.random();
     }
 
-    public static int GetPhysicalFactor(Entity attacker, Entity defender) {
+    public static int GetPhysicalDamage(Entity attacker, Entity defender) {
         // Possible adjustments: divide levels, square one of the factors, multiply by constant
         float jobMultiplier = 3 * attacker.jobLevel;
         float statsFactor = (attacker.stats.atk) / (float) (defender.stats.def);
@@ -132,9 +137,23 @@ public class Classes {
         return (int) (jobMultiplier * statsFactor * randomFactor / 100);
     }
 
-    public static int GetMagicalFactor(Entity caster, Entity defender) {
-        // Possible adjustment: Include Ability Power here. Magic will probably end up too powerful
-        return (int) (caster.jobLevel * caster.stats.mag / (float) (defender.stats.res));
+    public static int GetMagicalDamage(Entity caster, Entity defender, Ability ability) {
+        float statsFactor;
+        if (ability.damageType == DamageType.MAGICAL) {
+            statsFactor = caster.stats.mag / (float) (defender.stats.res);
+        }
+        else {
+            statsFactor = caster.stats.atk / (float) (defender.stats.def);
+        }
+        float randomFactor = 80 + (int) (Math.random() * ((120 - 80) + 1));
+        int signFactor;
+        if (ability.damaging) {
+            signFactor = 1;
+        }
+        else {
+            signFactor = -1;
+        }
+        return (int) (ability.abilityPower * signFactor * statsFactor * randomFactor / 100);
     }
 
     public static void InitStats() {

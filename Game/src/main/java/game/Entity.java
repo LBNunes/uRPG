@@ -62,6 +62,7 @@ public class Entity {
     public int                        currentMP;
     public int                        turnTimer;
     public boolean                    playerUnit;
+    public ArrayList<Ability>         abilities;
 
     public Text                       description1;
     public Text                       description2;
@@ -103,25 +104,27 @@ public class Entity {
         description2.options(null, Config.DESCRIPTION_FONT_SIZE, null);
         description3.options(null, Config.DESCRIPTION_FONT_SIZE, null);
         FullHeal();
+
+        abilities = new ArrayList<Ability>();
     }
 
     public Entity(AssetManager assets, int enemyID, int jobLevel) {
         playerUnit = false;
 
         pos = new Point();
-        sp = assets.newSprite(Enemies.GetSprite(enemyID));
+        sp = assets.newSprite(Enemy.GetSprite(enemyID));
 
-        name = Enemies.GetName();
-        className = Enemies.GetType(enemyID);
+        name = Enemy.GetName();
+        className = Enemy.GetType(enemyID);
 
-        classID = Enemies.GetClass(enemyID);
-        equipment = Enemies.GetEquipment(jobLevel);
+        classID = Enemy.GetClass(enemyID);
+        equipment = new EquipSet();
 
         this.enemyID = enemyID;
         this.jobLevel = jobLevel;
         jobExp = 0;
 
-        moveRange = Enemies.GetMoveRange(enemyID);
+        moveRange = Enemy.GetMoveRange(enemyID);
 
         CalculateStats();
 
@@ -138,6 +141,8 @@ public class Entity {
         description3.options(null, Config.DESCRIPTION_FONT_SIZE, null);
 
         FullHeal();
+
+        abilities = new ArrayList<Ability>();
     }
 
     public void FullHeal() {
@@ -154,7 +159,7 @@ public class Entity {
             base = Classes.GetBaseStats(classID);
         }
         else {
-            base = Enemies.GetBaseStats(enemyID);
+            base = Enemy.GetBaseStats(enemyID);
         }
         int HP = base.HP +
                  equipment.Get(ItemSlot.WEAPON).GetBonusHP() +

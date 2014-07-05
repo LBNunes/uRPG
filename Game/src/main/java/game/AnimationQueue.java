@@ -51,7 +51,7 @@ public class AnimationQueue {
     }
 
     public boolean IsEmpty() {
-        return queue.isEmpty();
+        return queue.size() == 0;
     }
 
     public void NewGroup() {
@@ -78,7 +78,25 @@ public class AnimationQueue {
         list.add(new QueuedDamage(new Damage(assets, damage, critical, color), pos));
     }
 
+    public void Push(String text, Color color) {
+        if (IsEmpty()) {
+            NewGroup();
+        }
+        // Last list
+        ArrayList<AnimQueueData> list = queue.get(queue.size() - 1);
+        list.add(new QueuedTextLog(text, color));
+    }
+
     public void Update() {
+
+        // if (queue.size() > 0) {
+        // System.out.print(queue.size() + " - ");
+        // for (ArrayList<AnimQueueData> list : queue) {
+        // System.out.print(list.size() + " ");
+        // }
+        // System.out.println("");
+        // }
+
         if (IsEmpty()) {
             return;
         }
@@ -170,5 +188,32 @@ public class AnimationQueue {
         public void Reset() {
             stopwatch.start();
         }
+    }
+
+    private class QueuedTextLog extends AnimQueueData {
+
+        String  text;
+        Color   color;
+        boolean fired;
+
+        public QueuedTextLog(String _text, Color _color) {
+            super(new Point(0, 0), 2500);
+            text = _text;
+            color = _color;
+            fired = false;
+        }
+
+        @Override
+        public void Render() {
+            if (!fired) {
+                fired = true;
+                TextLog.instance.Print(text, color);
+            }
+        }
+
+        @Override
+        public void Reset() {
+        }
+
     }
 }

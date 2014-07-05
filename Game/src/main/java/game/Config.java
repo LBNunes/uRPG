@@ -50,14 +50,17 @@ public class Config {
     public static final float   BATTLE_START_FPS       = 6.0f;
     public static final String  VICTORY_TEXT           = "img/victory.png";
     public static final int     VICTORY_FRAMES         = 1;
-    public static final float   VICTORY_FPS            = 0.2f;
+    public static final float   VICTORY_FPS            = 0.4f;
     public static final String  DEFEAT_TEXT            = "img/defeat.png";
     public static final int     DEFEAT_FRAMES          = 1;
-    public static final float   DEFEAT_FPS             = 0.2f;
+    public static final float   DEFEAT_FPS             = 0.4f;
 
     public static final String  ITEM_DATA              = "data/item";
     public static final String  CLASS_DATA             = "data/class";
+    public static final String  ABILITY_DATA           = "data/ability";
     public static final String  ENEMY_DATA             = "data/enemy";
+    public static final String  LOOT_DATA              = "data/loot";
+    public static final String  RECIPE_DATA            = "data/recipe";
     public static final String  AREA_DATA              = "data/area";
     public static final String  ENEMY_SET_DATA         = "data/enemyset";
     public static final String  PLAYER_NAMES           = "data/names";
@@ -96,5 +99,11 @@ public class Config {
     public static final float   DESCRIPTION_FONT_SIZE  = 16f;
 
     public static final String  PLAYER_SAVE            = "save/save";
+    public static final String  CITY_SAVE              = "save/csave";
+
+    public static final int     BASE_ENERGY            = 500;
+    public static final int     MS_PER_ENERGY_POINT    = 7500;
+    public static final int     ENERGY_PER_BATTLE      = 100;
+    public static final String  ENERGY_ICON            = "img/energy.png";
 
 }

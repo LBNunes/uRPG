@@ -27,11 +27,14 @@
 
 package game;
 
+import game.Ability.AreaType;
+import game.Ability.DamageType;
 import game.Grid.GridArea;
 import game.Grid.HexColors;
 import game.Item.ItemSlot;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 import org.unbiquitous.uImpala.engine.core.Game;
 import org.unbiquitous.uImpala.engine.core.GameComponents;
@@ -72,6 +75,7 @@ public class BattleScene extends GameObjectTreeScene {
     private boolean              hasMoved;
     private boolean              hasActed;
     private ArrayList<Point>     hexList;
+    private int                  battleRank;
 
     private boolean              quitWarning;
     private boolean              escKeyPressed;
@@ -82,9 +86,10 @@ public class BattleScene extends GameObjectTreeScene {
     private Button               itemButton;
     private Button               endButton;
 
-    // private AbilityWindow abilityWindow;
     private ItemWindow           itemWindow;
+    private AbilityWindow        abilityWindow;
     private Item                 selectedItem;
+    private Ability              selectedAbility;
 
     private static final Point[] allyLoc  = { new Point(0, 3),
                                           new Point(0, 2),
@@ -126,9 +131,10 @@ public class BattleScene extends GameObjectTreeScene {
             units.add(e);
         }
 
-        int[] enemies = Area.GetEnemySet(area, isDay, totalLevel);
+        battleRank = new Random().nextInt(totalLevel) + 1;
 
-        // TODO: Calculate jobLevel decently
+        int[] enemies = Area.GetEnemySet(area, isDay, battleRank);
+
         for (int i = 0; i < enemyLoc.length && i < enemies.length; ++i) {
             Entity e = new Entity(assets, enemies[i], 1);
             e.Move(enemyLoc[i].x, enemyLoc[i].y);
@@ -189,6 +195,8 @@ public class BattleScene extends GameObjectTreeScene {
 
         itemWindow = null;
         selectedItem = null;
+        abilityWindow = null;
+        selectedAbility = null;
 
         quitWarning = false;
 
@@ -199,7 +207,7 @@ public class BattleScene extends GameObjectTreeScene {
     protected void update() {
         if (screen.isCloseRequested()) {
             if (quitWarning) {
-                playerData.gold -= playerData.gold / 10;
+                playerData.gold -= playerData.gold / 50;
                 PlayerData.Save(Config.PLAYER_SAVE, playerData);
                 GameComponents.get(Game.class).quit();
             }
@@ -215,6 +223,10 @@ public class BattleScene extends GameObjectTreeScene {
 
         if (itemWindow != null) {
             itemWindow.update();
+        }
+
+        if (abilityWindow != null) {
+            abilityWindow.update();
         }
 
         TextLog.instance.Update();
@@ -238,6 +250,10 @@ public class BattleScene extends GameObjectTreeScene {
 
         if (itemWindow != null) {
             itemWindow.render(renderers);
+        }
+
+        if (abilityWindow != null) {
+            abilityWindow.render(renderers);
         }
 
         TextLog.instance.Render(Config.SCREEN_WIDTH / 2, (int) (0.9 * Config.SCREEN_HEIGHT), Corner.CENTER);
@@ -280,6 +296,7 @@ public class BattleScene extends GameObjectTreeScene {
                 break;
             case DEFEAT:
                 Stage_Defeat();
+                break;
             case VICTORY:
                 Stage_Victory();
                 break;
@@ -389,6 +406,9 @@ public class BattleScene extends GameObjectTreeScene {
                 abilityButton.Reset();
             }
             else {
+                hexList.clear();
+                selectedHex = null;
+                abilityWindow = new AbilityWindow(assets, "img/window.png", 0, 0, currentEntity.abilities);
                 currentStage = TurnStage.ABILITY_PICK;
                 HideActionButtons();
             }
@@ -448,7 +468,7 @@ public class BattleScene extends GameObjectTreeScene {
                 if (target != null && !target.IsDead() &&
                     target.playerUnit != currentEntity.playerUnit) {
 
-                    int damage = Classes.GetPhysicalFactor(currentEntity, target);
+                    int damage = Classes.GetPhysicalDamage(currentEntity, target);
                     Point damagePos = grid.FindHexPosition(target.pos.x, target.pos.y);
                     damagePos.y -= Grid.hexRadius / 2;
 
@@ -463,9 +483,6 @@ public class BattleScene extends GameObjectTreeScene {
                     }
 
                     target.Damage(damage);
-                    if (target.IsDead()) {
-                        TextLog.instance.Print(target.name + " has fallen!", target.playerUnit ? Color.red : Color.blue);
-                    }
 
                     hasActed = true;
                     grid.ClearColors();
@@ -487,12 +504,68 @@ public class BattleScene extends GameObjectTreeScene {
     }
 
     private void Stage_AbilityPick() {
-        currentStage = TurnStage.CHOOSE_ACTION;
-        abilityButton.Reset();
+        selectedAbility = abilityWindow.GetSelectedAbility();
+        if (selectedAbility != null) {
+            abilityWindow = null;
+            currentStage = TurnStage.ACTION_ABILITY;
+            selectedHex = null;
+            ListHexes(currentEntity.pos.x, currentEntity.pos.y, selectedAbility.areaType, selectedAbility.castRange);
+            grid.ColorHexes(hexList, selectedAbility.damaging ? HexColors.RED : HexColors.GREEN, true);
+        }
+        else if (escKeyPressed) {
+            abilityWindow = null;
+            ShowActionButtons();
+            grid.ClearColors();
+            grid.ColorArea(currentEntity.pos.x, currentEntity.pos.y, GridArea.SINGLE_HEX, HexColors.BLUE, 0);
+            currentStage = TurnStage.CHOOSE_ACTION;
+        }
     }
 
     private void Stage_ActionAbility() {
-        currentStage = TurnStage.CHOOSE_ACTION;
+
+        if (selectedHex != null) {
+            if (AlreadyListed(selectedHex.x, selectedHex.y)) {
+                ArrayList<Entity> targets = ListTargets(selectedHex.x, selectedHex.y, selectedAbility);
+                if (targets.size() >= 0) {
+                    if (selectedAbility.damageType == DamageType.MAGICAL) {
+                        TextLog.instance.Print(currentEntity.name + " casts " + selectedAbility.name + "!", Color.white);
+                    }
+                    else {
+                        TextLog.instance.Print(currentEntity.name + " uses " + selectedAbility.name + "!", Color.white);
+                    }
+                    for (Entity e : targets) {
+                        Point animPos = grid.FindHexPosition(e.pos.x, e.pos.y);
+                        animationQueue.Push(selectedAbility.path, selectedAbility.frames,
+                                            selectedAbility.fps, animPos);
+                    }
+                    animationQueue.NewGroup();
+                    for (Entity e : targets) {
+                        Point damagePos = grid.FindHexPosition(e.pos.x, e.pos.y);
+                        damagePos.y -= Grid.hexRadius / 2;
+                        int damage = Classes.GetMagicalDamage(currentEntity, e, selectedAbility);
+                        animationQueue.Push(damage, false, damage >= 0 ? Color.red : Color.green, damagePos);
+                        e.Damage(damage);
+                    }
+
+                    hasActed = true;
+                    grid.ClearColors();
+                    if (!(hasMoved && hasActed)) {
+                        ShowActionButtons();
+                        grid.ColorArea(currentEntity.pos.x, currentEntity.pos.y, GridArea.SINGLE_HEX, HexColors.BLUE, 0);
+                    }
+                    currentStage = TurnStage.PLAY_ANIMATIONS;
+                    nextStage = TurnStage.CHECK_END;
+                }
+            }
+        }
+
+        else if (escKeyPressed) {
+            selectedAbility = null;
+            ShowActionButtons();
+            grid.ClearColors();
+            grid.ColorArea(currentEntity.pos.x, currentEntity.pos.y, GridArea.SINGLE_HEX, HexColors.BLUE, 0);
+            currentStage = TurnStage.CHOOSE_ACTION;
+        }
     }
 
     private void Stage_ItemPick() {
@@ -526,7 +599,7 @@ public class BattleScene extends GameObjectTreeScene {
                     Point damagePos = animPos.clone();
                     damagePos.y -= Grid.hexRadius / 2;
 
-                    animationQueue.Push("img/heal.png", 35, 15, animPos);
+                    animationQueue.Push("img/anim/item.png", 35, 15, animPos);
 
                     if (hp != 0) {
                         animationQueue.NewGroup();
@@ -586,7 +659,13 @@ public class BattleScene extends GameObjectTreeScene {
         animationQueue.NewGroup();
         animationQueue.Push(Config.DEFEAT_TEXT, Config.DEFEAT_FRAMES, Config.DEFEAT_FPS,
                             new Point(Config.SCREEN_WIDTH / 2, Config.SCREEN_HEIGHT / 2));
-        // TODO: Put consequences (if any) into effect
+
+        int goldLoss = (int) (playerData.gold * 0.02);
+
+        animationQueue.NewGroup();
+        animationQueue.Push("Lost " + goldLoss + " gold...", Color.white);
+
+        playerData.gold -= goldLoss;
 
         currentStage = TurnStage.PLAY_ANIMATIONS;
         nextStage = TurnStage.BATTLE_END;
@@ -597,7 +676,8 @@ public class BattleScene extends GameObjectTreeScene {
         animationQueue.NewGroup();
         animationQueue.Push(Config.VICTORY_TEXT, Config.VICTORY_FRAMES, Config.VICTORY_FPS,
                             new Point(Config.SCREEN_WIDTH / 2, Config.SCREEN_HEIGHT / 2));
-        // TODO: Give items and job exp
+
+        GiveRewards();
 
         currentStage = TurnStage.PLAY_ANIMATIONS;
         nextStage = TurnStage.BATTLE_END;
@@ -606,6 +686,56 @@ public class BattleScene extends GameObjectTreeScene {
     private void Stage_BattleEnd() {
         PlayerData.Save(Config.PLAYER_SAVE, playerData);
         GameComponents.get(Game.class).pop();
+    }
+
+    private ArrayList<Entity> ListTargets(int x, int y, Ability ability) {
+        ArrayList<Entity> targets = new ArrayList<Entity>();
+
+        hexList.clear();
+        ListHexes(x, y, ability.areaType, ability.areaRange);
+
+        for (Point hex : hexList) {
+            Entity e = HexOccupied(hex.x, hex.y);
+            if (e != null) {
+                if (e.IsDead() == selectedAbility.targetsDead) {
+                    targets.add(e);
+                }
+            }
+        }
+
+        return targets;
+    }
+
+    private void ListHexes(int x, int y, AreaType areaType, int castRange) {
+        GridArea area = GridArea.SINGLE_HEX;
+
+        switch (areaType) {
+            case ALLIES:
+                for (Entity e : units) {
+                    if (e.playerUnit) {
+                        hexList.add(e.pos);
+                    }
+                }
+                return;
+            case FOES:
+                for (Entity e : units) {
+                    if (!e.playerUnit) {
+                        hexList.add(e.pos);
+                    }
+                }
+                return;
+            case SELF:
+                hexList.add(new Point(x, y));
+                return;
+            case CIRCLE:
+                area = GridArea.CIRCLE;
+                break;
+            case LINE:
+                area = GridArea.HORIZONTAL_LINE;
+                break;
+        }
+
+        ListHexes(x, y, area, castRange);
     }
 
     private void ListHexes(int x, int y, GridArea area, int range) {
@@ -742,6 +872,58 @@ public class BattleScene extends GameObjectTreeScene {
             }
         }
         return true;
+    }
+
+    private void GiveRewards() {
+        ArrayList<Entity> playerUnits = new ArrayList<Entity>();
+        ArrayList<Enemy> slainEnemies = new ArrayList<Enemy>();
+        ArrayList<ArrayList<Item>> loot = new ArrayList<ArrayList<Item>>();
+        int exp = 0;
+        int avgLevel = 0;
+        int gold = 0;
+
+        for (Entity e : units) {
+            if (e.playerUnit) {
+                playerUnits.add(e);
+            }
+            else {
+                Enemy enemy = Enemy.GetEnemy(e.enemyID);
+                slainEnemies.add(enemy);
+                exp += 10 + enemy.rank;
+                gold += enemy.rank;
+                loot.add(Enemy.GetLoot(e.enemyID, battleRank));
+            }
+        }
+
+        System.out.println("BATTLE END: Rank " + battleRank + ", " + playerUnits.size() + " players, " +
+                           slainEnemies.size() + " enemies");
+
+        avgLevel = (int) Math.ceil((battleRank / (double) playerUnits.size()));
+        exp *= avgLevel;
+
+        animationQueue.NewGroup();
+        animationQueue.Push("Gained " + exp + " experience and " + gold + " gold coins.", Color.white);
+
+        playerData.gold += gold;
+
+        for (Entity e : playerUnits) {
+            boolean leveled = e.GiveJobExp(exp);
+            if (leveled) {
+                animationQueue.NewGroup();
+                animationQueue.Push("img/anim/levelup.png", 35, 18, grid.FindHexPosition(e.pos.x, e.pos.y));
+                animationQueue.Push(e.name + " leveled up! Job Level " + e.jobLevel, Color.white);
+            }
+        }
+
+        for (ArrayList<Item> loots : loot) {
+            for (Item item : loots) {
+                animationQueue.NewGroup();
+                animationQueue.Push("img/anim/itemget.png", 35, 18,
+                                    grid.FindHexPosition(playerUnits.get(0).pos.x, playerUnits.get(0).pos.y));
+                animationQueue.Push("Obtained one " + item.GetName() + "!", Color.white);
+                playerData.inventory.AddItem(item.GetID(), 1);
+            }
+        }
     }
 
     private void HideActionButtons() {

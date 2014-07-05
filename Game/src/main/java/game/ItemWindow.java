@@ -245,7 +245,7 @@ public class ItemWindow extends SelectionWindow {
                 }
             }
             else {
-                line = "Crafting material";
+                line = "Crafting material (Rank " + item.GetRank() + ")";
             }
             return line;
         }

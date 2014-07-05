@@ -56,6 +56,7 @@ public class WorldMapScene extends GameScene {
     private ArrayList<Button> cityButtons;
     private Button            itemsButton;
     private Button            partyButton;
+    private Button            missionsButton;
     private Point[]           locations = { new Point(314, 214),
                                         new Point(620, 592),
                                         new Point(1020, 378),
@@ -73,7 +74,10 @@ public class WorldMapScene extends GameScene {
     private boolean           isDay;
     private Sprite            dayNightIcon;
     private Sprite            goldIcon;
+    private Sprite            energyIcon;
     private Text              playerGold;
+    private Text              playerEnergy;
+    private int               maxEnergy;
 
     public WorldMapScene() {
         // Initialize the screen manager
@@ -90,29 +94,34 @@ public class WorldMapScene extends GameScene {
 
         data = PlayerData.Load(assets, Config.PLAYER_SAVE);
 
+        energyIcon = assets.newSprite(Config.ENERGY_ICON);
+        maxEnergy = (int) (Config.BASE_ENERGY * EnvironmentInformation.GetFreeSpacePercentage());
+        if (maxEnergy < 200) {
+            maxEnergy = 200;
+        }
+        playerEnergy = assets.newText(Config.GOLD_FONT, "" + data.energy + " / " + maxEnergy);
+        playerEnergy.options(null, Config.GOLD_SIZE, true);
+
         goldIcon = assets.newSprite(Config.GOLD_ICON);
         playerGold = assets.newText(Config.GOLD_FONT, "");
         playerGold.options(null, Config.GOLD_SIZE, true);
 
-        itemsButton = new Button(
-                                 assets,
-                                 Config.BUTTON_LOOK,
-                                 "Inventory",
-                                 Color.white,
-                                 (int) (Config.SCREEN_WIDTH / 2 + 0.5 * (35 + Config.BUTTON_X_WIDTH)),
+        itemsButton = new Button(assets, Config.BUTTON_LOOK, "Inventory", Color.white,
+                                 (int) (Config.SCREEN_WIDTH / 2 - 1 * (35 + Config.BUTTON_X_WIDTH)),
                                  (int) (Config.SCREEN_HEIGHT * 0.95));
 
-        partyButton = new Button(
-                                 assets,
-                                 Config.BUTTON_LOOK,
-                                 "Party",
-                                 Color.white,
-                                 (int) (Config.SCREEN_WIDTH / 2 - 0.5 * (35 + Config.BUTTON_X_WIDTH)),
+        partyButton = new Button(assets, Config.BUTTON_LOOK, "Party", Color.white,
+                                 (int) (Config.SCREEN_WIDTH / 2),
                                  (int) (Config.SCREEN_HEIGHT * 0.95));
 
+        missionsButton = new Button(assets, Config.BUTTON_LOOK, "Missions", Color.white,
+                                    (int) (Config.SCREEN_WIDTH / 2 + 1 * (35 + Config.BUTTON_X_WIDTH)),
+                                    (int) (Config.SCREEN_HEIGHT * 0.95));
         UpdateGold();
 
         CreateRegion(EnvironmentInformation.GetSSID());
+
+        TextLog.instance.SetAssets(assets);
     }
 
     @Override
@@ -135,14 +144,33 @@ public class WorldMapScene extends GameScene {
             GameComponents.get(Game.class).push(new PlayerMenuScene(data, PlayerMenuScene.PARTY));
         }
 
-        else
+        else if (missionsButton.WasPressed()) {
+            this.frozen = true;
+            this.visible = true;
+            GameComponents.get(Game.class).push(new PlayerMenuScene(data, PlayerMenuScene.MISSIONS));
+        }
+
+        else {
             for (int i = 0; i < areaButtons.size(); ++i) {
                 if (areaButtons.get(i).WasPressed()) {
-                    this.frozen = true;
-                    this.visible = false;
-                    GameComponents.get(Game.class).push(new BattleScene(data, areas[i], isDay));
+                    if (data.energy >= Config.ENERGY_PER_BATTLE) {
+                        this.frozen = true;
+                        this.visible = false;
+                        data.energy -= Config.ENERGY_PER_BATTLE;
+                        PlayerData.Save(Config.PLAYER_SAVE, data);
+                        GameComponents.get(Game.class).push(new BattleScene(data, areas[i], isDay));
+                    }
+                    else {
+                        TextLog.instance.Print("Not enough energy! You need " + Config.ENERGY_PER_BATTLE + ".",
+                                               Color.white);
+                        areaButtons.get(i).Reset();
+                    }
                 }
             }
+        }
+
+        TextLog.instance.Update();
+        UpdateEnergy();
     }
 
     @Override
@@ -162,13 +190,21 @@ public class WorldMapScene extends GameScene {
 
         itemsButton.render(renderers);
         partyButton.render(renderers);
+        missionsButton.render(renderers);
 
+        energyIcon.render(screen, Config.SCREEN_HEIGHT * 0.02f,
+                          Config.SCREEN_HEIGHT * 0.98f, Corner.BOTTOM_LEFT);
+        playerEnergy.render(screen, Config.SCREEN_HEIGHT * 0.02f + goldIcon.getWidth() * 1.2f,
+                            Config.SCREEN_HEIGHT * 0.99f, Corner.BOTTOM_LEFT);
         goldIcon.render(screen, Config.SCREEN_HEIGHT * 0.02f,
-                        Config.SCREEN_HEIGHT * 0.98f, Corner.BOTTOM_LEFT);
+                        Config.SCREEN_HEIGHT * 0.98f - goldIcon.getHeight() * 1.1f, Corner.BOTTOM_LEFT);
         playerGold.render(screen, Config.SCREEN_HEIGHT * 0.02f + goldIcon.getWidth() * 1.2f,
-                          Config.SCREEN_HEIGHT * 0.99f, Corner.BOTTOM_LEFT);
+                          Config.SCREEN_HEIGHT * 0.99f - goldIcon.getHeight() * 1.1f, Corner.BOTTOM_LEFT);
         dayNightIcon.render(screen, Config.SCREEN_WIDTH - Config.SCREEN_HEIGHT * 0.02f,
                             Config.SCREEN_HEIGHT * 0.98f, Corner.BOTTOM_RIGHT);
+
+        TextLog.instance.Render(Config.SCREEN_WIDTH / 2, (int) (0.9 * Config.SCREEN_HEIGHT), Corner.CENTER);
+
     }
 
     @Override
@@ -188,6 +224,10 @@ public class WorldMapScene extends GameScene {
 
         this.frozen = false;
         this.visible = true;
+
+        TextLog.instance.SetAssets(assets);
+
+        System.gc();
     }
 
     @Override
@@ -215,10 +255,12 @@ public class WorldMapScene extends GameScene {
         Classes.InitStats();
         Entity.InitNames();
         Entity.InitExp();
-        Enemies.InitNames();
-        Enemies.InitTable();
+        Enemy.InitNames();
+        Enemy.InitTable();
+        Enemy.InitLoot();
         Area.InitAreas();
         Area.InitEnemySets();
+        Ability.InitTable();
     }
 
     private void CheckDayNight() {
@@ -270,5 +312,20 @@ public class WorldMapScene extends GameScene {
         gold += data.gold;
 
         playerGold.setText(gold);
+    }
+
+    private void UpdateEnergy() {
+        if (data.energy < maxEnergy) {
+            long currentTime = System.currentTimeMillis();
+            int energy = (int) (currentTime - data.lastRefresh) / Config.MS_PER_ENERGY_POINT;
+            if (energy > 0) {
+                data.energy += energy;
+                if (data.energy > maxEnergy) {
+                    data.energy = maxEnergy;
+                }
+                data.lastRefresh = currentTime;
+                playerEnergy.setText("" + data.energy + " / " + maxEnergy);
+            }
+        }
     }
 }
