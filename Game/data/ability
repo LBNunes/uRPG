@@ -1,0 +1,11 @@
+# ID NAME           CLASS       PATH                FRAMES  FPS     RANK    POW   COST    RANGE   ARANGE    AREA    TYPE     DAMAGES  TDEAD
+001 Magic_Missile   MAGE        img/anim/missile.png    25  20.0    1       10      5       2       0       CIRCLE  MAGICAL     1       0
+002 Magic_Missile+  MAGE        img/anim/missile+.png   25  20.0    9       30     15       2       0       CIRCLE  MAGICAL     1       0
+006 Cure            MAGE        img/anim/heal.png       25  10.0    3       10     10       2       0       CIRCLE  MAGICAL     0       0
+007 Cure+           CLERIC      img/anim/heal.png       25  10.0    8       20     20       2       2       CIRCLE  MAGICAL     0       0
+008 Cure++          CLERIC      img/anim/heal.png       25  10.0    15      30     30       1       1       ALLIES  MAGICAL     0       0
+011 Ressurect       CLERIC      img/anim/revive.png     25  10.0    10      20     30       1       0       CIRCLE  MAGICAL     0       1
+012 Mass_Ressurect  CLERIC      img/anim/revive.png     25  10.0    17      30     50       1       1       ALLIES  MAGICAL     0       1
+016 Fire            MAGE        img/anim/fire.png       25  10.0    4       15     15       2       1       CIRCLE  MAGICAL     1       0
+017 Fire+           ARCHMAGE    img/anim/fire+.png      20  8.0     8       20     15       2       1       CIRCLE  MAGICAL     1       0
+018 Fire++          ARCHMAGE    img/anim/fire+.png      20  8.0     16      40     30       2       1       CIRCLE  MAGICAL     1       0
