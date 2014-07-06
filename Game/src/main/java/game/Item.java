@@ -170,6 +170,7 @@ public class Item {
         this.bonusMag = mag;
         this.bonusRes = res;
         this.bonusSpd = spd;
+        this.rank = rank;
 
         table.put(itemID, this);
     }

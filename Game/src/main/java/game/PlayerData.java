@@ -251,7 +251,7 @@ public class PlayerData {
 
         // 3 x Life Potion, 1 x Mana Potion
         data.inventory.AddItem(501, 3);
-        data.inventory.AddItem(502, 1);
+        data.inventory.AddItem(541, 1);
 
         return data;
     }

@@ -99,14 +99,15 @@ public class Enemy {
         return selected;
     }
 
-    public static ArrayList<Item> GetLoot(int enemyID, int battleRank) {
+    public static ArrayList<Item> GetLoot(int enemyID, int enemyRank) {
         ArrayList<Item> loot = new ArrayList<Item>();
         Enemy e = table.get(enemyID);
 
         for (Loot l : e.possibleLoot) {
-            if (Math.random() < l.probability) {
+            double roll = Math.random();
+            if (roll < l.probability) {
                 Item item = Item.GetItem(l.itemID);
-                if (item.GetRank() >= battleRank) {
+                if (item.GetRank() >= enemyRank) {
                     loot.add(item);
                 }
             }

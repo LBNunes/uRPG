@@ -123,20 +123,24 @@ public class BattleScene extends GameObjectTreeScene {
         units = new ArrayList<Entity>();
 
         int totalLevel = 0;
-
-        for (int i = 0; i < allyLoc.length && i < playerData.party.size(); ++i) {
-            Entity e = playerData.party.get(i);
+        int avgLevel = 0;
+        int nParty;
+        for (nParty = 0; nParty < allyLoc.length && nParty < playerData.party.size(); ++nParty) {
+            Entity e = playerData.party.get(nParty);
             totalLevel += e.jobLevel;
-            e.Move(allyLoc[i].x, allyLoc[i].y);
+            avgLevel += e.jobLevel;
+            e.Move(allyLoc[nParty].x, allyLoc[nParty].y);
             units.add(e);
         }
+
+        avgLevel /= nParty;
 
         battleRank = new Random().nextInt(totalLevel) + 1;
 
         int[] enemies = Area.GetEnemySet(area, isDay, battleRank);
 
         for (int i = 0; i < enemyLoc.length && i < enemies.length; ++i) {
-            Entity e = new Entity(assets, enemies[i], 1);
+            Entity e = new Entity(assets, enemies[i], avgLevel);
             e.Move(enemyLoc[i].x, enemyLoc[i].y);
             units.add(e);
         }
@@ -408,7 +412,12 @@ public class BattleScene extends GameObjectTreeScene {
             else {
                 hexList.clear();
                 selectedHex = null;
-                abilityWindow = new AbilityWindow(assets, "img/window.png", 0, 0, currentEntity.abilities);
+                abilityWindow = new AbilityWindow(assets, "img/window.png", 0, 0, currentEntity.abilities,
+                                                  new Predicate<Ability>() {
+                                                      public boolean Eval(Ability a) {
+                                                          return a.cost <= currentEntity.currentMP;
+                                                      }
+                                                  });
                 currentStage = TurnStage.ABILITY_PICK;
                 HideActionButtons();
             }
@@ -546,6 +555,8 @@ public class BattleScene extends GameObjectTreeScene {
                         animationQueue.Push(damage, false, damage >= 0 ? Color.red : Color.green, damagePos);
                         e.Damage(damage);
                     }
+
+                    currentEntity.SpendMP(selectedAbility.cost);
 
                     hasActed = true;
                     grid.ClearColors();
@@ -891,12 +902,10 @@ public class BattleScene extends GameObjectTreeScene {
                 slainEnemies.add(enemy);
                 exp += 10 + enemy.rank;
                 gold += enemy.rank;
-                loot.add(Enemy.GetLoot(e.enemyID, battleRank));
+                ArrayList<Item> enemyLoot = Enemy.GetLoot(e.enemyID, e.jobLevel);
+                loot.add(enemyLoot);
             }
         }
-
-        System.out.println("BATTLE END: Rank " + battleRank + ", " + playerUnits.size() + " players, " +
-                           slainEnemies.size() + " enemies");
 
         avgLevel = (int) Math.ceil((battleRank / (double) playerUnits.size()));
         exp *= avgLevel;

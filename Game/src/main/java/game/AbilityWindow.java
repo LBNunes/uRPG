@@ -51,16 +51,18 @@ public class AbilityWindow extends SelectionWindow {
 
     private ArrayList<Ability> list;
 
-    public AbilityWindow(AssetManager assets, String frame, int x, int y, ArrayList<Ability> list) {
+    public AbilityWindow(AssetManager assets, String frame, int x, int y, ArrayList<Ability> list, Predicate<Ability> p) {
         super(assets, frame, x, y, WINDOW_WIDTH, WINDOW_HEIGHT);
         mouse.connect(MouseSource.EVENT_BUTTON_DOWN, new Observation(this, "OnButtonDown"));
         mouse.connect(MouseSource.EVENT_BUTTON_UP, new Observation(this, "OnButtonUp"));
         this.list = list;
         for (int i = 0; i < list.size(); ++i) {
             Ability a = list.get(i);
-            options.add(new AbilityOption(assets, i, i, x + OPTION_OFFSET_X, y + OPTION_OFFSET_Y,
-                                          WINDOW_WIDTH * this.frame.getWidth() / 3 - OPTION_OFFSET_X * 2,
-                                          (int) (this.frame.getHeight() * 1.2), a));
+            if (p.Eval(a)) {
+                options.add(new AbilityOption(assets, i, i, x + OPTION_OFFSET_X, y + OPTION_OFFSET_Y,
+                                              WINDOW_WIDTH * this.frame.getWidth() / 3 - OPTION_OFFSET_X * 2,
+                                              (int) (this.frame.getHeight() * 1.2), a));
+            }
         }
     }
 

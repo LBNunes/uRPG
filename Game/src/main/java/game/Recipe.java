@@ -12,7 +12,7 @@ import java.util.StringTokenizer;
 
 public class Recipe {
 
-    private static ArrayList<Recipe> recipes;
+    private static ArrayList<Recipe> recipes = new ArrayList<Recipe>();
 
     public int                       itemID;
     public ArrayList<Integer>        components;

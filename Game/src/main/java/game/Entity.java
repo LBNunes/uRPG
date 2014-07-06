@@ -245,7 +245,6 @@ public class Entity {
         boolean leveled = false;
         while (jobExp > levelUp) {
             jobLevel++;
-            jobExp -= levelUp;
             levelUp = GetExpForLevelUp(jobLevel);
             leveled = true;
         }
