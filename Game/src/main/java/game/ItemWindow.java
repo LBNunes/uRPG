@@ -119,7 +119,7 @@ public class ItemWindow extends SelectionWindow {
         super.OnButtonUp(event, subject);
     }
 
-    private class ItemOption extends Option {
+    public static class ItemOption extends Option {
 
         Sprite icon;
         Text   name;
@@ -205,7 +205,7 @@ public class ItemWindow extends SelectionWindow {
             }
         }
 
-        private String GetLine1(Item item, boolean usable) {
+        protected String GetLine1(Item item, boolean usable) {
             String line = "";
             if (usable) {
                 if (item.GetBonusHP() != 0 && item.GetBonusMP() != 0) {
@@ -250,7 +250,7 @@ public class ItemWindow extends SelectionWindow {
             return line;
         }
 
-        private String GetLine2(Item item, boolean usable) {
+        protected String GetLine2(Item item, boolean usable) {
             String line = "";
             boolean slash = false;
 

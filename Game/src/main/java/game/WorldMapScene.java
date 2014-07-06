@@ -261,6 +261,7 @@ public class WorldMapScene extends GameScene {
         Area.InitAreas();
         Area.InitEnemySets();
         Ability.InitTable();
+        Recipe.InitTable();
     }
 
     private void CheckDayNight() {
