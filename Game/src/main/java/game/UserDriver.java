@@ -54,7 +54,7 @@ public class UserDriver implements UosDriver {
     public void init(Gateway gateway, InitialProperties properties, String instanceId) {
         System.out.println("Starting up User Driver...");
         data = PlayerData.GetData();
-        driver = new UpDriver("uos.user");
+        driver = new UpDriver("uRPG.userDriver");
         driver.addService("GetUserInfo");
     }
 
