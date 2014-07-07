@@ -63,7 +63,9 @@ public abstract class Mission {
 
     @Override
     public String toString() {
-        return missionID.toString() + " " + questGiver.toString() + " " + giverName + " " + reward + " " +
+        return objective.toString() + " " + missionID.toString().replace(' ', '_') + " " + questGiver.toString() + " " +
+               giverName + " " +
+               reward + " " +
                creationTime + " " + rank + " " + (completed ? 1 : 0) + " " + (handedOut ? 1 : 0);
     }
 
@@ -87,7 +89,7 @@ public abstract class Mission {
             case KILL:
                 m = KillMission.Restore(UUID.fromString(tokenizer.nextToken()),
                                         UUID.fromString(tokenizer.nextToken()),
-                                        tokenizer.nextToken(),
+                                        tokenizer.nextToken().replace('_', ' '),
                                         Integer.parseInt(tokenizer.nextToken()),
                                         Long.parseLong(tokenizer.nextToken()),
                                         Integer.parseInt(tokenizer.nextToken()),

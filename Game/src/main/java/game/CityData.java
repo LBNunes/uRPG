@@ -50,6 +50,9 @@ import java.util.UUID;
 import org.unbiquitous.uImpala.engine.asset.AssetManager;
 
 public class CityData {
+
+    private static CityData  instance            = null;
+
     UUID                     uuid;
     String                   name;
 
@@ -64,7 +67,7 @@ public class CityData {
 
     public static final long ONE_DAY_MILISECONDS = 24 * 60 * 60 * 1000;
 
-    public CityData() {
+    private CityData() {
         uuid = null;
         name = EnvironmentInformation.GetComputerName();
         academyClass = ClassID.NONE;
@@ -76,15 +79,20 @@ public class CityData {
         lastRefresh = 0;
     }
 
-    // TODO: Decide on how classes are determined
+    public static CityData GetData() {
+        if (instance == null) {
+            instance = Load();
+        }
+        return instance;
+    }
 
-    public static CityData Load(AssetManager assets, String citySave) {
+    private static CityData Load() {
 
         CityData data = new CityData();
 
         FileInputStream f;
         try {
-            f = new FileInputStream(citySave);
+            f = new FileInputStream(Config.CITY_SAVE);
             Scanner s = new Scanner(f);
             String line;
             StringTokenizer tokenizer;
@@ -130,8 +138,9 @@ public class CityData {
             for (int i = 0; i < nRecruits; ++i) {
                 line = s.nextLine();
                 tokenizer = new StringTokenizer(line, " ");
-                data.recruits.add(new Entity(assets, tokenizer.nextToken(),
-                                             data.academyClass, Integer.parseInt(tokenizer.nextToken())));
+                data.recruits.add(new Entity(tokenizer.nextToken(),
+                                             data.academyClass,
+                                             Integer.parseInt(tokenizer.nextToken())));
             }
 
             line = s.nextLine();
@@ -163,7 +172,7 @@ public class CityData {
             f.close();
         }
         catch (FileNotFoundException e) {
-            return CreateNew(assets);
+            return CreateNew();
         }
         catch (IOException e) {
             System.out.println("FATAL ERROR: Save file corrupted!");
@@ -173,44 +182,48 @@ public class CityData {
         return data;
     }
 
-    public static void Save(String save, CityData data) {
+    public static void Save() {
+
+        if (instance == null) {
+            return;
+        }
         BufferedWriter w = null;
 
         try {
-            w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(save), "utf-8"));
-            w.write(data.uuid.toString() + '\n');
+            w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(Config.CITY_SAVE), "utf-8"));
+            w.write(instance.uuid.toString() + '\n');
 
-            w.write(data.name + " " + data.academyClass.toString() + " " + data.affinityAreaID + '\n');
+            w.write(instance.name + " " + instance.academyClass.toString() + " " + instance.affinityAreaID + '\n');
 
-            w.write("" + data.lastRefresh + '\n');
+            w.write("" + instance.lastRefresh + '\n');
 
-            w.write("" + data.guildMissions.size() + '\n');
+            w.write("" + instance.guildMissions.size() + '\n');
 
-            for (Mission m : data.guildMissions) {
+            for (Mission m : instance.guildMissions) {
                 w.write(m.toString() + '\n');
             }
 
-            w.write("" + data.marketTransactions.size() + '\n');
+            w.write("" + instance.marketTransactions.size() + '\n');
 
-            for (Transaction t : data.marketTransactions) {
+            for (Transaction t : instance.marketTransactions) {
                 w.write(t.toString() + '\n');
             }
 
-            w.write("" + data.recruits.size() + '\n');
+            w.write("" + instance.recruits.size() + '\n');
 
-            for (Entity e : data.recruits) {
+            for (Entity e : instance.recruits) {
                 w.write(e.name + " " + e.jobLevel + '\n');
             }
 
-            w.write("" + data.knownCities.size() + '\n');
+            w.write("" + instance.knownCities.size() + '\n');
 
-            for (KnownCity c : data.knownCities) {
+            for (KnownCity c : instance.knownCities) {
                 w.write(c.toString() + '\n');
             }
 
-            w.write("" + data.playerVisits.size() + '\n');
+            w.write("" + instance.playerVisits.size() + '\n');
 
-            for (PlayerVisit v : data.playerVisits) {
+            for (PlayerVisit v : instance.playerVisits) {
                 w.write(v.toString() + '\n');
             }
 
@@ -222,7 +235,7 @@ public class CityData {
         }
     }
 
-    private static CityData CreateNew(AssetManager assets) {
+    private static CityData CreateNew() {
 
         CityData data = new CityData();
 
@@ -233,7 +246,7 @@ public class CityData {
         data.PickClass();
         data.GenerateMissions();
         data.CreateBasicTransactions();
-        data.CreateRecruits(assets);
+        data.CreateRecruits();
 
         data.lastRefresh = System.currentTimeMillis();
 
@@ -414,7 +427,7 @@ public class CityData {
         }
     }
 
-    private void CreateRecruits(AssetManager assets) {
+    private void CreateRecruits() {
 
         final int N_RECRUITS = 3;
 
@@ -433,12 +446,11 @@ public class CityData {
                 rank += v.averageLevel;
             }
             rank /= playerVisits.size();
+            rank /= 2;
         }
 
-        rank /= 2;
-
         for (int i = 0; i < N_RECRUITS; ++i) {
-            recruits.add(new Entity(assets, Entity.GetRandomName(), academyClass, rand.nextInt(rank) + 1));
+            recruits.add(new Entity(Entity.GetRandomName(), academyClass, rand.nextInt(rank) + 1));
         }
     }
 
@@ -474,7 +486,10 @@ public class CityData {
             }
         }
 
-        CreateRecruits(assets);
+        CreateRecruits();
+        for (Entity e : recruits) {
+            e.LoadSprites(assets);
+        }
 
         lastRefresh = System.currentTimeMillis();
 

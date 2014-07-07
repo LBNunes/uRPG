@@ -53,13 +53,13 @@ public class PlayerMenuScene extends GameScene {
     private ItemWindow      items;
     private PlayerData      data;
 
-    public PlayerMenuScene(PlayerData data, int menuType) {
+    public PlayerMenuScene(int menuType) {
 
         screen = GameComponents.get(Screen.class);
         keyboard = screen.getKeyboard();
         keyboard.connect(KeyboardSource.EVENT_KEY_DOWN, new Observation(this, "OnKeyDown"));
 
-        this.data = data;
+        this.data = PlayerData.GetData();
 
         if (menuType == INVENTORY) {
             party = null;
@@ -80,7 +80,7 @@ public class PlayerMenuScene extends GameScene {
     protected void update() {
 
         if (screen.isCloseRequested()) {
-            PlayerData.Save(Config.PLAYER_SAVE, data);
+            PlayerData.Save();
             GameComponents.get(Game.class).quit();
         }
 
@@ -148,7 +148,7 @@ public class PlayerMenuScene extends GameScene {
                     party.Reset();
                 }
                 else {
-                    PlayerData.Save(Config.PLAYER_SAVE, data);
+                    PlayerData.Save();
                     frozen = true; // Prevents the pop from being called again if Esc is pressed...
                     GameComponents.get(Game.class).pop();
                 }

@@ -43,20 +43,20 @@ import java.util.Scanner;
 import java.util.StringTokenizer;
 import java.util.UUID;
 
-import org.unbiquitous.uImpala.engine.asset.AssetManager;
-
 public class PlayerData {
 
-    UUID               uuid;
-    int                gold;
-    int                energy;
-    long               lastRefresh;
-    ArrayList<Entity>  party;
-    Inventory          inventory;
-    ArrayList<Mission> missions;
-    HashSet<KnownCity> knownCities;
+    private static PlayerData instance = null;
 
-    public PlayerData() {
+    public UUID               uuid;
+    public int                gold;
+    public int                energy;
+    public long               lastRefresh;
+    public ArrayList<Entity>  party;
+    public Inventory          inventory;
+    public ArrayList<Mission> missions;
+    public HashSet<KnownCity> knownCities;
+
+    private PlayerData() {
         uuid = null;
         party = new ArrayList<Entity>();
         inventory = new Inventory();
@@ -64,13 +64,20 @@ public class PlayerData {
         knownCities = new HashSet<KnownCity>();
     }
 
-    public static PlayerData Load(AssetManager assets, String playerSave) {
+    public static PlayerData GetData() {
+        if (instance == null) {
+            instance = Load();
+        }
+        return instance;
+    }
+
+    private static PlayerData Load() {
 
         PlayerData data = new PlayerData();
 
         FileInputStream f;
         try {
-            f = new FileInputStream(playerSave);
+            f = new FileInputStream(Config.PLAYER_SAVE);
             Scanner s = new Scanner(f);
             String line;
             StringTokenizer tokenizer;
@@ -105,7 +112,7 @@ public class PlayerData {
                 line = s.nextLine();
                 tokenizer = new StringTokenizer(line, " ");
 
-                Entity e = new Entity(assets, tokenizer.nextToken(),
+                Entity e = new Entity(tokenizer.nextToken(),
                                       ClassID.valueOf(tokenizer.nextToken()),
                                       Integer.parseInt(tokenizer.nextToken()));
                 e.GiveJobExp(Integer.parseInt(tokenizer.nextToken()));
@@ -161,7 +168,7 @@ public class PlayerData {
             f.close();
         }
         catch (FileNotFoundException e) {
-            return CreateNew(assets);
+            return CreateNew();
         }
         catch (IOException e) {
             System.out.println("FATAL ERROR: Save file corrupted!");
@@ -171,42 +178,42 @@ public class PlayerData {
         return data;
     }
 
-    public static void Save(String save, PlayerData data) {
+    public static void Save() {
         BufferedWriter w = null;
 
         try {
-            w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(save),
+            w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(Config.PLAYER_SAVE),
                                                           "utf-8"));
-            w.write(data.uuid.toString() + '\n');
+            w.write(instance.uuid.toString() + '\n');
 
-            w.write("" + data.gold + " " + data.energy + " " + data.lastRefresh + "\n");
+            w.write("" + instance.gold + " " + instance.energy + " " + instance.lastRefresh + "\n");
 
-            w.write("" + data.party.size());
+            w.write("" + instance.party.size());
 
-            for (Entity e : data.party) {
+            for (Entity e : instance.party) {
                 w.write("\n");
                 WriteEntity(w, e);
             }
 
             w.write("\n");
 
-            w.write("" + data.inventory.itemList.size() + " ");
+            w.write("" + instance.inventory.itemList.size() + " ");
 
-            for (IEntry e : data.inventory.itemList) {
+            for (IEntry e : instance.inventory.itemList) {
                 w.write("" + e.item + " " + e.amount + " ");
             }
 
             w.write("\n");
 
-            w.write("" + data.missions.size() + "\n");
+            w.write("" + instance.missions.size() + "\n");
 
-            for (Mission m : data.missions) {
+            for (Mission m : instance.missions) {
                 w.write(m.toString() + '\n');
             }
 
-            w.write("" + data.knownCities.size());
+            w.write("" + instance.knownCities.size());
 
-            for (KnownCity c : data.knownCities) {
+            for (KnownCity c : instance.knownCities) {
                 w.write(c.toString() + '\n');
             }
 
@@ -230,7 +237,7 @@ public class PlayerData {
         }
     }
 
-    private static PlayerData CreateNew(AssetManager assets) {
+    private static PlayerData CreateNew() {
 
         PlayerData data = new PlayerData();
 
@@ -240,9 +247,9 @@ public class PlayerData {
         data.energy = (int) (Config.BASE_ENERGY * EnvironmentInformation.GetFreeSpacePercentage());
         data.lastRefresh = System.currentTimeMillis();
 
-        Entity warrior = new Entity(assets, Entity.GetRandomName(), ClassID.WARRIOR, 1);
-        Entity rogue = new Entity(assets, Entity.GetRandomName(), ClassID.ROGUE, 1);
-        Entity mage = new Entity(assets, Entity.GetRandomName(), ClassID.MAGE, 1);
+        Entity warrior = new Entity(Entity.GetRandomName(), ClassID.WARRIOR, 1);
+        Entity rogue = new Entity(Entity.GetRandomName(), ClassID.ROGUE, 1);
+        Entity mage = new Entity(Entity.GetRandomName(), ClassID.MAGE, 1);
         mage.abilities.add(Ability.GetAbility(001));
 
         data.party.add(warrior);
@@ -256,8 +263,8 @@ public class PlayerData {
         return data;
     }
 
-    public void DiscoverCity(UUID cityUUID, String cityName) {
-        knownCities.add(new KnownCity(cityUUID, cityName, System.currentTimeMillis()));
+    public static void DiscoverCity(UUID cityUUID, String cityName) {
+        instance.knownCities.add(new KnownCity(cityUUID, cityName, System.currentTimeMillis()));
     }
 
     public static class KnownCity {

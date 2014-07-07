@@ -105,9 +105,9 @@ public class BattleScene extends GameObjectTreeScene {
                                           new Point(10, 1),
                                           };
 
-    public BattleScene(PlayerData playerData, int area, boolean isDay) {
+    public BattleScene(int area, boolean isDay) {
 
-        this.playerData = playerData;
+        this.playerData = PlayerData.GetData();
 
         // Initialize the screen manager
         screen = GameComponents.get(Screen.class);
@@ -140,7 +140,8 @@ public class BattleScene extends GameObjectTreeScene {
         int[] enemies = Area.GetEnemySet(area, isDay, battleRank);
 
         for (int i = 0; i < enemyLoc.length && i < enemies.length; ++i) {
-            Entity e = new Entity(assets, enemies[i], avgLevel);
+            Entity e = new Entity(enemies[i], avgLevel);
+            e.LoadSprites(assets);
             e.Move(enemyLoc[i].x, enemyLoc[i].y);
             units.add(e);
         }
@@ -212,7 +213,7 @@ public class BattleScene extends GameObjectTreeScene {
         if (screen.isCloseRequested()) {
             if (quitWarning) {
                 playerData.gold -= playerData.gold / 50;
-                PlayerData.Save(Config.PLAYER_SAVE, playerData);
+                PlayerData.Save();
                 GameComponents.get(Game.class).quit();
             }
             else {
@@ -695,7 +696,7 @@ public class BattleScene extends GameObjectTreeScene {
     }
 
     private void Stage_BattleEnd() {
-        PlayerData.Save(Config.PLAYER_SAVE, playerData);
+        PlayerData.Save();
         GameComponents.get(Game.class).pop();
     }
 

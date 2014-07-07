@@ -64,6 +64,7 @@ public class Entity {
     public boolean                    playerUnit;
     public ArrayList<Ability>         abilities;
 
+    public boolean                    loadedAssets;
     public Text                       description1;
     public Text                       description2;
     public Text                       description3;
@@ -73,11 +74,11 @@ public class Entity {
     private static ArrayList<String>  names = new ArrayList<String>();
     private static ArrayList<Integer> exp   = new ArrayList<Integer>();
 
-    public Entity(AssetManager assets, String name, ClassID classID, int jobLevel) {
+    public Entity(String name, ClassID classID, int jobLevel) {
         playerUnit = true;
 
         pos = new Point();
-        sp = assets.newSprite(Classes.GetClassSprite(classID));
+        sp = null;
         this.name = name;
         this.className = Classes.GetClassName(classID);
         this.classID = classID;
@@ -94,25 +95,23 @@ public class Entity {
 
         turnTimer = 0;
 
-        hpGauge = new Gauge(assets, stats.HP, Color.green);
-        mpGauge = new Gauge(assets, stats.MP, Color.blue);
-        description1 = assets.newText(Config.DESCRIPTION_FONT, name);
-        description2 = assets.newText(Config.DESCRIPTION_FONT, className + " (" + jobLevel + ")");
-        description3 = assets.newText(Config.DESCRIPTION_FONT,
-                                      "HP " + currentHP + "/" + stats.HP + " " + currentMP + "/" + stats.MP);
-        description1.options(null, Config.DESCRIPTION_FONT_SIZE, null);
-        description2.options(null, Config.DESCRIPTION_FONT_SIZE, null);
-        description3.options(null, Config.DESCRIPTION_FONT_SIZE, null);
+        hpGauge = null;
+        mpGauge = null;
+        description1 = null;
+        description2 = null;
+        description3 = null;
         FullHeal();
 
         abilities = new ArrayList<Ability>();
+
+        loadedAssets = false;
     }
 
-    public Entity(AssetManager assets, int enemyID, int jobLevel) {
+    public Entity(int enemyID, int jobLevel) {
         playerUnit = false;
 
         pos = new Point();
-        sp = assets.newSprite(Enemy.GetSprite(enemyID));
+        sp = null;
 
         name = Enemy.GetName();
         className = Enemy.GetType(enemyID);
@@ -130,27 +129,56 @@ public class Entity {
 
         turnTimer = 0;
 
-        hpGauge = new Gauge(assets, stats.HP, Color.red);
-        mpGauge = new Gauge(assets, stats.MP, Color.blue);
-        description1 = assets.newText(Config.DESCRIPTION_FONT, name);
-        description2 = assets.newText(Config.DESCRIPTION_FONT, className + " (" + jobLevel + ")");
-        description3 = assets.newText(Config.DESCRIPTION_FONT,
-                                      "HP " + currentHP + "/" + stats.HP + " " + currentMP + "/" + stats.MP);
-        description1.options(null, Config.DESCRIPTION_FONT_SIZE, null);
-        description2.options(null, Config.DESCRIPTION_FONT_SIZE, null);
-        description3.options(null, Config.DESCRIPTION_FONT_SIZE, null);
+        hpGauge = null;
+        mpGauge = null;
+        description1 = null;
+        description2 = null;
+        description3 = null;
 
         FullHeal();
 
         abilities = new ArrayList<Ability>();
+
+        loadedAssets = false;
+    }
+
+    public void LoadSprites(AssetManager assets) {
+        if (!playerUnit) {
+            sp = assets.newSprite(Enemy.GetSprite(enemyID));
+            hpGauge = new Gauge(assets, stats.HP, Color.red);
+            mpGauge = new Gauge(assets, stats.MP, Color.blue);
+            description1 = assets.newText(Config.DESCRIPTION_FONT, name);
+            description2 = assets.newText(Config.DESCRIPTION_FONT, className + " (" + jobLevel + ")");
+            description3 = assets.newText(Config.DESCRIPTION_FONT,
+                                          "HP " + currentHP + "/" + stats.HP + " " + currentMP + "/" + stats.MP);
+            description1.options(null, Config.DESCRIPTION_FONT_SIZE, null);
+            description2.options(null, Config.DESCRIPTION_FONT_SIZE, null);
+            description3.options(null, Config.DESCRIPTION_FONT_SIZE, null);
+        }
+        else {
+            sp = assets.newSprite(Classes.GetClassSprite(classID));
+            hpGauge = new Gauge(assets, stats.HP, Color.green);
+            mpGauge = new Gauge(assets, stats.MP, Color.blue);
+            description1 = assets.newText(Config.DESCRIPTION_FONT, name);
+            description2 = assets.newText(Config.DESCRIPTION_FONT, className + " (" + jobLevel + ")");
+            description3 = assets.newText(Config.DESCRIPTION_FONT,
+                                          "HP " + currentHP + "/" + stats.HP + " " + currentMP + "/" + stats.MP);
+            description1.options(null, Config.DESCRIPTION_FONT_SIZE, null);
+            description2.options(null, Config.DESCRIPTION_FONT_SIZE, null);
+            description3.options(null, Config.DESCRIPTION_FONT_SIZE, null);
+        }
+
+        loadedAssets = true;
     }
 
     public void FullHeal() {
         currentHP = stats.HP;
         currentMP = stats.MP;
-        hpGauge.Update(currentHP);
-        mpGauge.Update(currentMP);
-        description3.setText(currentHP + "/" + stats.HP + " " + currentMP + "/" + stats.MP);
+        if (loadedAssets) {
+            hpGauge.Update(currentHP);
+            mpGauge.Update(currentMP);
+            description3.setText(currentHP + "/" + stats.HP + " " + currentMP + "/" + stats.MP);
+        }
     }
 
     private void CalculateStats() {
@@ -195,11 +223,14 @@ public class Entity {
 
     public void RecalculateStats() {
         CalculateStats();
-        hpGauge.NewMax(stats.HP);
-        mpGauge.NewMax(stats.MP);
-        hpGauge.Update(currentHP);
-        mpGauge.Update(currentMP);
-        description3.setText(currentHP + "/" + stats.HP + " " + currentMP + "/" + stats.MP);
+
+        if (loadedAssets) {
+            hpGauge.NewMax(stats.HP);
+            mpGauge.NewMax(stats.MP);
+            hpGauge.Update(currentHP);
+            mpGauge.Update(currentMP);
+            description3.setText(currentHP + "/" + stats.HP + " " + currentMP + "/" + stats.MP);
+        }
     }
 
     public void Update() {
@@ -208,6 +239,10 @@ public class Entity {
 
     public void Render(Screen screen, int x, int y) {
 
+        if (!loadedAssets) {
+            System.out.println("WARNING: Attempting to render unloaded entity");
+            return;
+        }
         MouseSource mouse = screen.getMouse();
         Rect box = new Rect(x - sp.getWidth() / 2, y - sp.getHeight() / 2, sp.getWidth(), sp.getHeight());
 
@@ -261,8 +296,10 @@ public class Entity {
             currentHP = stats.HP;
         }
 
-        hpGauge.Update(currentHP);
-        description3.setText(currentHP + "/" + stats.HP + " " + currentMP + "/" + stats.MP);
+        if (loadedAssets) {
+            hpGauge.Update(currentHP);
+            description3.setText(currentHP + "/" + stats.HP + " " + currentMP + "/" + stats.MP);
+        }
     }
 
     public void SpendMP(int cost) {
@@ -274,8 +311,10 @@ public class Entity {
             currentMP = stats.MP;
         }
 
-        mpGauge.Update(currentMP);
-        description3.setText(currentHP + "/" + stats.HP + " " + currentMP + "/" + stats.MP);
+        if (loadedAssets) {
+            mpGauge.Update(currentMP);
+            description3.setText(currentHP + "/" + stats.HP + " " + currentMP + "/" + stats.MP);
+        }
     }
 
     public static String GetRandomName() {

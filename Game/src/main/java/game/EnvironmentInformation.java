@@ -57,9 +57,17 @@ public class EnvironmentInformation {
     public boolean                        hasBattery;
     public boolean                        isDay;
 
-    public static void Initialize() {
+    public boolean                        invertBattery;
+
+    public static void Initialize(String[] args) {
 
         instance = new EnvironmentInformation();
+
+        instance.invertBattery = false;
+
+        for (String s : args) {
+            ParseArg(s);
+        }
 
         instance.userName = System.getProperty("user.name");
         instance.os = System.getProperty("os.name");
@@ -69,6 +77,12 @@ public class EnvironmentInformation {
         instance.hasBattery = DiscoverBattery();
         instance.computerName = DiscoverComputerName();
         instance.isDay = DiscoverDay();
+    }
+
+    private static void ParseArg(String s) {
+        if (s.equalsIgnoreCase("-invertBattery")) {
+            instance.invertBattery = true;
+        }
     }
 
     public static String GetUserName() {
@@ -96,8 +110,10 @@ public class EnvironmentInformation {
                 double fs = store.getUsableSpace() / (double) store.getTotalSpace();
                 freeSpace += fs;
                 nRoots += 1;
+                System.out.println(root.toString() + " " + fs);
             }
             catch (FileSystemException e) {
+                System.out.println(root.toString() + " Cannot calculate");
             }
             catch (IOException e) {
             }
@@ -159,7 +175,7 @@ public class EnvironmentInformation {
     }
 
     public static boolean HasBattery() {
-        return instance.hasBattery;
+        return instance.hasBattery ^ instance.invertBattery;
     }
 
     private static boolean DiscoverBattery() {

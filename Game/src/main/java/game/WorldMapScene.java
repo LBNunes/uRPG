@@ -40,11 +40,13 @@ import org.unbiquitous.uImpala.engine.io.Screen;
 import org.unbiquitous.uImpala.engine.io.ScreenManager;
 import org.unbiquitous.uImpala.util.Color;
 import org.unbiquitous.uImpala.util.Corner;
+import org.unbiquitous.uos.core.adaptabitilyEngine.Gateway;
 
 public class WorldMapScene extends GameScene {
 
     private Screen            screen;
     private GameRenderers     renderers;
+    private Gateway           gateway;
 
     private PlayerData        data;
 
@@ -85,14 +87,16 @@ public class WorldMapScene extends GameScene {
         screen.open(Config.WINDOW_TITLE, Config.SCREEN_WIDTH,
                     Config.SCREEN_HEIGHT, Config.FULLSCREEN, Config.WINDOW_ICON);
         GameComponents.put(Screen.class, screen);
-
-        InitializeTables();
+        gateway = GameComponents.get(Gateway.class);
 
         CheckDayNight();
 
         bg = assets.newSprite(Config.WORLD_BG);
 
-        data = PlayerData.Load(assets, Config.PLAYER_SAVE);
+        data = PlayerData.GetData();
+        for (Entity e : data.party) {
+            e.LoadSprites(assets);
+        }
 
         energyIcon = assets.newSprite(Config.ENERGY_ICON);
         maxEnergy = (int) (Config.BASE_ENERGY * EnvironmentInformation.GetFreeSpacePercentage());
@@ -128,26 +132,26 @@ public class WorldMapScene extends GameScene {
     protected void update() {
 
         if (screen.isCloseRequested()) {
-            PlayerData.Save(Config.PLAYER_SAVE, data);
+            PlayerData.Save();
             GameComponents.get(Game.class).quit();
         }
 
         else if (itemsButton.WasPressed()) {
             this.frozen = true;
             this.visible = true;
-            GameComponents.get(Game.class).push(new PlayerMenuScene(data, PlayerMenuScene.INVENTORY));
+            GameComponents.get(Game.class).push(new PlayerMenuScene(PlayerMenuScene.INVENTORY));
         }
 
         else if (partyButton.WasPressed()) {
             this.frozen = true;
             this.visible = true;
-            GameComponents.get(Game.class).push(new PlayerMenuScene(data, PlayerMenuScene.PARTY));
+            GameComponents.get(Game.class).push(new PlayerMenuScene(PlayerMenuScene.PARTY));
         }
 
         else if (missionsButton.WasPressed()) {
             this.frozen = true;
             this.visible = true;
-            GameComponents.get(Game.class).push(new PlayerMenuScene(data, PlayerMenuScene.MISSIONS));
+            GameComponents.get(Game.class).push(new PlayerMenuScene(PlayerMenuScene.MISSIONS));
         }
 
         else {
@@ -157,8 +161,8 @@ public class WorldMapScene extends GameScene {
                         this.frozen = true;
                         this.visible = false;
                         data.energy -= Config.ENERGY_PER_BATTLE;
-                        PlayerData.Save(Config.PLAYER_SAVE, data);
-                        GameComponents.get(Game.class).push(new BattleScene(data, areas[i], isDay));
+                        PlayerData.Save();
+                        GameComponents.get(Game.class).push(new BattleScene(areas[i], isDay));
                     }
                     else {
                         TextLog.instance.Print("Not enough energy! You need " + Config.ENERGY_PER_BATTLE + ".",
@@ -247,21 +251,6 @@ public class WorldMapScene extends GameScene {
             locations[idx1] = locations[idx2];
             locations[idx2] = p;
         }
-    }
-
-    private void InitializeTables() {
-
-        Item.InitTable();
-        Classes.InitStats();
-        Entity.InitNames();
-        Entity.InitExp();
-        Enemy.InitNames();
-        Enemy.InitTable();
-        Enemy.InitLoot();
-        Area.InitAreas();
-        Area.InitEnemySets();
-        Ability.InitTable();
-        Recipe.InitTable();
     }
 
     private void CheckDayNight() {

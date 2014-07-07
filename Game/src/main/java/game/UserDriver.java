@@ -31,14 +31,19 @@ import java.util.List;
 
 import org.unbiquitous.uos.core.InitialProperties;
 import org.unbiquitous.uos.core.adaptabitilyEngine.Gateway;
+import org.unbiquitous.uos.core.applicationManager.CallContext;
 import org.unbiquitous.uos.core.driverManager.UosDriver;
 import org.unbiquitous.uos.core.messageEngine.dataType.UpDriver;
+import org.unbiquitous.uos.core.messageEngine.messages.Call;
+import org.unbiquitous.uos.core.messageEngine.messages.Response;
 
 public class UserDriver implements UosDriver {
 
+    private PlayerData data;
+    private UpDriver   driver;
+
     public UpDriver getDriver() {
-        // TODO Auto-generated method stub
-        return null;
+        return driver;
     }
 
     public List<UpDriver> getParent() {
@@ -47,8 +52,10 @@ public class UserDriver implements UosDriver {
     }
 
     public void init(Gateway gateway, InitialProperties properties, String instanceId) {
-        // TODO Auto-generated method stub
-
+        System.out.println("Starting up User Driver...");
+        data = PlayerData.GetData();
+        driver = new UpDriver("uos.user");
+        driver.addService("GetUserInfo");
     }
 
     public void destroy() {
@@ -56,4 +63,9 @@ public class UserDriver implements UosDriver {
 
     }
 
+    public void GetUserInfo(Call call, Response response, CallContext context) {
+        response.addParameter("uuid", data.uuid);
+        response.addParameter("leaderName", data.party.get(0).name);
+        response.addParameter("leaderClass", data.party.get(0).classID);
+    }
 }

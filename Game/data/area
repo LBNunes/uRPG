@@ -1,7 +1,7 @@
 # ID NAME               ICON PATH                   BG PATH                 CLASS BIAS
 001 Grassland           img/icon/grassicon.png      img/bg/grassbg.jpg      WARRIOR
 002 Forest              img/icon/foresticon.png     img/bg/forestbg.jpg     MAGE
-003 Desert              img/icon/deserticon.png     img/bg/desertbg.jpg     WARRIOR
+003 Desert              img/icon/deserticon.png     img/bg/desertbg.jpg     ROGUE
 004 Haunted_Mansion     img/icon/hauntedicon.png    img/bg/hauntedbg.jpg    MAGE
 005 Dungeon             img/icon/dungeonicon.png    img/bg/dungeonbg.jpg    ROGUE
 006 Lake                img/icon/lakeicon.png       img/bg/lakebg.jpg       WARRIOR

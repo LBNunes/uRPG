@@ -27,23 +27,100 @@
 
 package game;
 
+import game.Classes.ClassID;
+
+import java.util.List;
+import java.util.UUID;
+
+import org.unbiquitous.uImpala.engine.asset.Text;
+import org.unbiquitous.uImpala.engine.core.Game;
+import org.unbiquitous.uImpala.engine.core.GameComponents;
 import org.unbiquitous.uImpala.engine.core.GameScene;
+import org.unbiquitous.uImpala.engine.io.KeyboardEvent;
+import org.unbiquitous.uImpala.engine.io.KeyboardSource;
+import org.unbiquitous.uImpala.engine.io.Screen;
+import org.unbiquitous.uImpala.engine.io.ScreenManager;
+import org.unbiquitous.uImpala.util.Color;
+import org.unbiquitous.uImpala.util.Corner;
+import org.unbiquitous.uImpala.util.observer.Event;
+import org.unbiquitous.uImpala.util.observer.Observation;
+import org.unbiquitous.uImpala.util.observer.Subject;
+import org.unbiquitous.uos.core.adaptabitilyEngine.Gateway;
+import org.unbiquitous.uos.core.adaptabitilyEngine.ServiceCallException;
+import org.unbiquitous.uos.core.driverManager.DriverData;
+import org.unbiquitous.uos.core.messageEngine.dataType.UpDevice;
+import org.unbiquitous.uos.core.messageEngine.messages.Call;
+import org.unbiquitous.uos.core.messageEngine.messages.Response;
 
 public class CityServer extends GameScene {
 
+    private CityData       data;
+    private Gateway        gateway;
+    private Screen         screen;
+    private KeyboardSource keyboard;
+
+    private Text           uRPG;
+    private Text           cityName;
+    private Text           pressEsc;
+
+    private long           lastRefresh;
+
     public CityServer() {
 
+        screen = GameComponents.get(ScreenManager.class).create();
+        screen.open("uRPG", 200, 100, false, Config.WINDOW_ICON);
+        GameComponents.put(Screen.class, screen);
+        keyboard = screen.getKeyboard();
+        keyboard.connect(KeyboardSource.EVENT_KEY_DOWN, new Observation(this, "OnKeyDown"));
+
+        data = CityData.GetData();
+
+        uRPG = assets.newText("font/seguisb.ttf", "uRPG");
+        cityName = assets.newText("font/seguisb.ttf", "The City of " + data.name);
+        pressEsc = assets.newText("font/seguisb.ttf", "Press ESC to quit");
+
+        gateway = GameComponents.get(Gateway.class);
+
+        lastRefresh = 0;
     }
 
     @Override
     protected void update() {
-        // TODO Auto-generated method stub
+
+        if (screen.isCloseRequested()) {
+            CityData.Save();
+            GameComponents.get(Game.class).quit();
+        }
+
+        long time = System.currentTimeMillis();
+        if (time - lastRefresh > 15000) {
+            lastRefresh = time;
+            try {
+                List<DriverData> userDrivers = gateway.listDrivers("uRPG.userDriver");
+                if (userDrivers == null) {
+                    System.out.println("No users connected.");
+                    return;
+                }
+                UpDevice device = userDrivers.get(0).getDevice();
+                Call call = new Call("uRPG.userDriver", "GetUserInfo");
+                Response response = gateway.callService(device, call);
+                UUID uuid = (UUID) response.getResponseData("uuid");
+                String leader = (String) response.getResponseData("leaderName");
+                ClassID classID = (ClassID) response.getResponseData("leaderClass");
+                System.out.println("Found party led by " + leader + ", the " + Classes.GetClassName(classID));
+
+            }
+            catch (ServiceCallException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
     protected void render() {
-        // TODO Auto-generated method stub
-
+        uRPG.render(screen, 100, 20, Corner.CENTER, 1.0f, 0.0f, 1.0f, 1.0f, Color.white);
+        cityName.render(screen, 100, 50, Corner.CENTER, 1.0f, 0.0f, 1.0f, 1.0f, Color.white);
+        pressEsc.render(screen, 100, 80, Corner.CENTER, 1.0f, 0.0f, 1.0f, 1.0f, Color.white);
     }
 
     @Override
@@ -58,4 +135,12 @@ public class CityServer extends GameScene {
 
     }
 
+    @SuppressWarnings("unused")
+    private void OnKeyDown(Event event, Subject subject) {
+        KeyboardEvent e = (KeyboardEvent) event;
+        if (e.getKey() == 1) {
+            CityData.Save();
+            GameComponents.get(Game.class).quit();
+        }
+    }
 }

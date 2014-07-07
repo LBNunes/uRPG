@@ -42,7 +42,8 @@ public class Main {
     public static void main(final String[] args) {
         Game.run(new GameSettings() {
             {
-                EnvironmentInformation.Initialize();
+                EnvironmentInformation.Initialize(args);
+                InitializeTables(); // Not really appropriate, but prevents initialization issues.
                 System.out.println("Running on Windows? " + EnvironmentInformation.IsWindows());
                 System.out.println("Has Battery? " + EnvironmentInformation.HasBattery());
                 System.out.println("Computer Name: " + EnvironmentInformation.GetComputerName());
@@ -64,11 +65,38 @@ public class Main {
                             add(SpeakerManager.class);
                         }
                     });
+                    put("ubiquitos.driver.deploylist", UserDriver.class.getName() + ';');
                 }
                 else {
                     put("first_scene", CityServer.class);
+                    put("input_managers", new ArrayList<Class<?>>() {
+                        {
+                            add(KeyboardManager.class);
+                        }
+                    });
+                    put("output_managers", new ArrayList<Class<?>>() {
+                        {
+                            add(ScreenManager.class);
+                        }
+                    });
+                    put("ubiquitos.driver.deploylist", CityDriver.class.getName() + ";");
                 }
             }
         });
+    }
+
+    private static void InitializeTables() {
+
+        Item.InitTable();
+        Classes.InitStats();
+        Entity.InitNames();
+        Entity.InitExp();
+        Enemy.InitNames();
+        Enemy.InitTable();
+        Enemy.InitLoot();
+        Area.InitAreas();
+        Area.InitEnemySets();
+        Ability.InitTable();
+        Recipe.InitTable();
     }
 }

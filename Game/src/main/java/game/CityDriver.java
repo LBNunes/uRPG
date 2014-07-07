@@ -31,19 +31,25 @@ import java.util.List;
 
 import org.unbiquitous.uos.core.InitialProperties;
 import org.unbiquitous.uos.core.adaptabitilyEngine.Gateway;
+import org.unbiquitous.uos.core.applicationManager.CallContext;
 import org.unbiquitous.uos.core.driverManager.UosDriver;
 import org.unbiquitous.uos.core.messageEngine.dataType.UpDriver;
+import org.unbiquitous.uos.core.messageEngine.messages.Call;
+import org.unbiquitous.uos.core.messageEngine.messages.Response;
 
 public class CityDriver implements UosDriver {
 
-    public void init(Gateway gateway, InitialProperties properties, String instanceId) {
-        // TODO Auto-generated method stub
+    private CityData data;
+    private UpDriver driver;
 
+    public void init(Gateway gateway, InitialProperties properties, String instanceId) {
+        data = CityData.GetData();
+        driver = new UpDriver("uRPG.cityDriver");
+        driver.addService("GetCityInfo");
     }
 
     public UpDriver getDriver() {
-        // TODO Auto-generated method stub
-        return null;
+        return driver;
     }
 
     public List<UpDriver> getParent() {
@@ -54,6 +60,10 @@ public class CityDriver implements UosDriver {
     public void destroy() {
         // TODO Auto-generated method stub
 
+    }
+
+    public void GetCityName(Call call, Response response, CallContext context) {
+        response.addParameter("info", data.uuid.toString() + " " + data.name);
     }
 
 }
