@@ -42,6 +42,11 @@ public class UserDriver implements UosDriver {
     private PlayerData data;
     private UpDriver   driver;
 
+    public UserDriver() {
+        driver = new UpDriver("uRPG.userDriver");
+        driver.addService("GetUserInfo");
+    }
+
     public UpDriver getDriver() {
         return driver;
     }
@@ -54,8 +59,6 @@ public class UserDriver implements UosDriver {
     public void init(Gateway gateway, InitialProperties properties, String instanceId) {
         System.out.println("Starting up User Driver...");
         data = PlayerData.GetData();
-        driver = new UpDriver("uRPG.userDriver");
-        driver.addService("GetUserInfo");
     }
 
     public void destroy() {

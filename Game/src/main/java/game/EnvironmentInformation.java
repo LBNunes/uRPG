@@ -108,9 +108,14 @@ public class EnvironmentInformation {
             try {
                 FileStore store = Files.getFileStore(root);
                 double fs = store.getUsableSpace() / (double) store.getTotalSpace();
-                freeSpace += fs;
-                nRoots += 1;
-                System.out.println(root.toString() + " " + fs);
+                if (!Double.isNaN(fs)) { // check if NaN
+                    freeSpace += fs;
+                    nRoots += 1;
+                    System.out.println(root.toString() + " " + fs);
+                }
+                else {
+                    System.out.println(root.toString() + " Retrieved NaN");
+                }
             }
             catch (FileSystemException e) {
                 System.out.println(root.toString() + " Cannot calculate");

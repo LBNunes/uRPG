@@ -97,7 +97,7 @@ public class CityServer extends GameScene {
             lastRefresh = time;
             try {
                 List<DriverData> userDrivers = gateway.listDrivers("uRPG.userDriver");
-                if (userDrivers == null) {
+                if (userDrivers == null || userDrivers.size() == 0) {
                     System.out.println("No users connected.");
                     return;
                 }

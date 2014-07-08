@@ -42,10 +42,14 @@ public class CityDriver implements UosDriver {
     private CityData data;
     private UpDriver driver;
 
-    public void init(Gateway gateway, InitialProperties properties, String instanceId) {
-        data = CityData.GetData();
+    public CityDriver() {
         driver = new UpDriver("uRPG.cityDriver");
         driver.addService("GetCityInfo");
+    }
+
+    public void init(Gateway gateway, InitialProperties properties, String instanceId) {
+        System.out.println("Starting up City Driver...");
+        data = CityData.GetData();
     }
 
     public UpDriver getDriver() {

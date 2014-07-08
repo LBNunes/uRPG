@@ -63,8 +63,8 @@ public abstract class Mission {
 
     @Override
     public String toString() {
-        return objective.toString() + " " + missionID.toString().replace(' ', '_') + " " + questGiver.toString() + " " +
-               giverName + " " +
+        return objective.toString() + " " + missionID.toString() + " " + questGiver.toString() + " " +
+               giverName.replace(' ', '_') + " " +
                reward + " " +
                creationTime + " " + rank + " " + (completed ? 1 : 0) + " " + (handedOut ? 1 : 0);
     }
