@@ -75,6 +75,32 @@ public class Classes {
         return null;
     }
 
+    public static ClassID GetPromotion1(ClassID classID) {
+        switch (classID) {
+            case WARRIOR:
+                return ClassID.PALADIN;
+            case MAGE:
+                return ClassID.ARCHMAGE;
+            case ROGUE:
+                return ClassID.HUNTER;
+            default:
+                return ClassID.NONE;
+        }
+    }
+
+    public static ClassID GetPromotion2(ClassID classID) {
+        switch (classID) {
+            case WARRIOR:
+                return ClassID.BERSERKER;
+            case MAGE:
+                return ClassID.CLERIC;
+            case ROGUE:
+                return ClassID.NINJA;
+            default:
+                return ClassID.NONE;
+        }
+    }
+
     public static String GetClassSprite(ClassID id) {
         return table.get(id).sprite;
     }

@@ -104,6 +104,11 @@ public class Config {
     public static final int     BASE_ENERGY            = 500;
     public static final int     MS_PER_ENERGY_POINT    = 7500;
     public static final int     ENERGY_PER_BATTLE      = 100;
+    public static final int     ENERGY_PER_CITY_VISIT  = 100;
+    public static final int     MS_PER_CITY_RESTORE    = 7200000;
+    public static final int     MS_PER_MISSION_HANDOUT = 3600000;
+    public static final int     LEVEL_FOR_PROMOTION    = 8;
+    public static final int     PROMOTION_COST         = 1000;
     public static final String  ENERGY_ICON            = "img/energy.png";
 
 }

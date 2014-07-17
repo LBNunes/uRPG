@@ -30,6 +30,8 @@ package game;
 import game.Item.ItemSlot;
 import game.PlayerData.Inventory;
 
+import java.util.ArrayList;
+
 import org.unbiquitous.uImpala.engine.asset.AssetManager;
 import org.unbiquitous.uImpala.engine.asset.Sprite;
 import org.unbiquitous.uImpala.engine.asset.Text;
@@ -51,7 +53,7 @@ public class ItemWindow extends SelectionWindow {
     private Inventory list;
 
     public ItemWindow(AssetManager assets, String frame, int x, int y, Inventory list, boolean swappable,
-                      Predicate<Item> p) {
+                      Predicate<Item> p, ArrayList<Integer> goldCosts) {
         super(assets, frame, x, y, WINDOW_WIDTH, WINDOW_HEIGHT);
         mouse.connect(MouseSource.EVENT_BUTTON_DOWN, new Observation(this, "OnButtonDown"));
         mouse.connect(MouseSource.EVENT_BUTTON_UP, new Observation(this, "OnButtonUp"));
@@ -63,9 +65,28 @@ public class ItemWindow extends SelectionWindow {
                                            y + OPTION_OFFSET_Y,
                                            WINDOW_WIDTH * this.frame.getWidth() / 3 - OPTION_OFFSET_X * 2,
                                            (int) (1.2 * this.frame.getHeight()),
-                                           swappable, item, list.itemList.get(i).amount));
+                                           swappable, item, list.itemList.get(i).amount,
+                                           goldCosts == null ? 0 : goldCosts.get(i)));
             }
+        }
+    }
 
+    public ItemWindow(AssetManager assets, String frame, int x, int y, ArrayList<Integer> itemList, boolean swappable,
+                      Predicate<Item> p, ArrayList<Integer> goldCosts) {
+        super(assets, frame, x, y, WINDOW_WIDTH, WINDOW_HEIGHT);
+        mouse.connect(MouseSource.EVENT_BUTTON_DOWN, new Observation(this, "OnButtonDown"));
+        mouse.connect(MouseSource.EVENT_BUTTON_UP, new Observation(this, "OnButtonUp"));
+
+        for (int i = 0; i < itemList.size(); ++i) {
+            Item item = Item.GetItem(itemList.get(i));
+            if (p == null || p.Eval(item)) {
+                options.add(new ItemOption(assets, options.size(), i, x + OPTION_OFFSET_X,
+                                           y + OPTION_OFFSET_Y,
+                                           WINDOW_WIDTH * this.frame.getWidth() / 3 - OPTION_OFFSET_X * 2,
+                                           (int) (1.2 * this.frame.getHeight()),
+                                           swappable, item, list.itemList.get(i).amount,
+                                           goldCosts == null ? 0 : goldCosts.get(i)));
+            }
         }
     }
 
@@ -125,13 +146,18 @@ public class ItemWindow extends SelectionWindow {
         Text   name;
         Text   stats1;
         Text   stats2;
+        Text   cost;
         Item   item;
 
         public ItemOption(AssetManager assets, int _index, int _originalIndex, int _baseX, int _baseY, int _w, int _h,
-                          boolean _swappable, Item _item, int amount) {
+                          boolean _swappable, Item _item, int amount, int _cost) {
             super(assets, _index, _originalIndex, _baseX, _baseY, _w, _h, _swappable);
 
             item = _item;
+
+            if (item == null) {
+                System.out.println("ffffff");
+            }
 
             if (item.GetSlot() == ItemSlot.NONE) {
                 if (item.IsUsable()) {
@@ -169,6 +195,13 @@ public class ItemWindow extends SelectionWindow {
                     stats2 = null;
                 }
             }
+
+            if (_cost > 0) {
+                cost = assets.newText("font/seguisb.ttf", "" + cost + "G");
+            }
+            else {
+                cost = null;
+            }
         }
 
         @Override
@@ -190,6 +223,14 @@ public class ItemWindow extends SelectionWindow {
                               box.y + box.h / 2 - name.getHeight() / 2, Corner.TOP_LEFT);
                 stats2.render(screen, (int) (box.x + 0.10 * box.w + 40),
                               box.y + box.h / 2 + name.getHeight() / 2, Corner.TOP_LEFT);
+            }
+
+            int mx = screen.getMouse().getX();
+            int my = screen.getMouse().getY();
+            if (cost != null) {
+                if (box.IsInside(mx, my)) {
+                    cost.render(screen, mx, my, Corner.TOP_LEFT);
+                }
             }
         }
 

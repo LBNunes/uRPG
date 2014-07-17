@@ -51,6 +51,7 @@ public class PlayerMenuScene extends GameScene {
     private KeyboardSource  keyboard;
     private EntityWindow    party;
     private ItemWindow      items;
+    private MissionWindow   missions;
     private PlayerData      data;
 
     public PlayerMenuScene(int menuType) {
@@ -68,11 +69,18 @@ public class PlayerMenuScene extends GameScene {
                                        public boolean Eval(Item a) {
                                            return true;
                                        }
-                                   });
+                                   }, null);
+            missions = null;
         }
         else if (menuType == PARTY) {
-            party = new EntityWindow(assets, "img/window.png", 0, 0, data.party, true, true);
+            party = new EntityWindow(assets, "img/window.png", 0, 0, data.party, true, true, null);
             items = null;
+            missions = null;
+        }
+        else if (menuType == MISSIONS) {
+            party = null;
+            items = null;
+            missions = new MissionWindow(assets, "img/window.png", 0, 0, data.missions);
         }
     }
 
@@ -98,7 +106,7 @@ public class PlayerMenuScene extends GameScene {
                                                    return (a.GetSlot() == party.GetSelectedSlot() &&
                                                    Classes.CanEquip(party.GetSelectedEntity().classID, a));
                                                }
-                                           });
+                                           }, null);
                     party.Freeze();
                 }
             }
@@ -116,6 +124,9 @@ public class PlayerMenuScene extends GameScene {
                 }
             }
         }
+        if (missions != null) {
+            missions.update();
+        }
     }
 
     @Override
@@ -126,6 +137,10 @@ public class PlayerMenuScene extends GameScene {
 
         if (items != null) {
             items.render(renderers);
+        }
+
+        if (missions != null) {
+            missions.render(renderers);
         }
     }
 

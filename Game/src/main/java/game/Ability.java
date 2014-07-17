@@ -70,7 +70,7 @@ public class Ability {
         return table.get(abilityID);
     }
 
-    public static ArrayList<Ability> GetEnemy(Predicate<Ability> p) {
+    public static ArrayList<Ability> GetAbility(Predicate<Ability> p) {
         ArrayList<Ability> list = new ArrayList<Ability>();
 
         Set<Integer> keys = table.keySet();

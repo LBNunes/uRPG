@@ -36,7 +36,7 @@ public abstract class Mission {
     }
 
     public UUID      missionID;
-    public UUID      questGiver;
+    public UUID      guildCityUUID;
     public String    giverName;
     public int       reward;
     public long      creationTime;
@@ -49,10 +49,10 @@ public abstract class Mission {
 
     }
 
-    public Mission(UUID _questGiver, String _giverName, int _reward, int _rank, Objective _objective) {
+    public Mission(UUID _guildCityUUID, String _giverName, int _reward, int _rank, Objective _objective) {
         missionID = UUID.randomUUID();
         creationTime = System.currentTimeMillis();
-        questGiver = _questGiver;
+        guildCityUUID = _guildCityUUID;
         giverName = _giverName;
         reward = _reward;
         rank = _rank;
@@ -63,16 +63,16 @@ public abstract class Mission {
 
     @Override
     public String toString() {
-        return objective.toString() + " " + missionID.toString() + " " + questGiver.toString() + " " +
+        return objective.toString() + " " + missionID.toString() + " " + guildCityUUID.toString() + " " +
                giverName.replace(' ', '_') + " " +
                reward + " " +
                creationTime + " " + rank + " " + (completed ? 1 : 0) + " " + (handedOut ? 1 : 0);
     }
 
-    protected void Set(UUID _missionID, UUID _questGiver, String _giverName, int _reward,
+    protected void Set(UUID _missionID, UUID _guildCityUUID, String _giverName, int _reward,
                        long _creationTime, int _rank, boolean _completed, boolean _handedOut) {
         missionID = _missionID;
-        questGiver = _questGiver;
+        guildCityUUID = _guildCityUUID;
         giverName = _giverName;
         reward = _reward;
         creationTime = _creationTime;
@@ -147,8 +147,8 @@ public abstract class Mission {
             amount = _amount;
         }
 
-        public KillMission(UUID _questGiver, String _giverName, int _reward, int _rank, int _enemyID, int _amount) {
-            super(_questGiver, _giverName, _reward, _rank, Objective.KILL);
+        public KillMission(UUID _guildCityUUID, String _giverName, int _reward, int _rank, int _enemyID, int _amount) {
+            super(_guildCityUUID, _giverName, _reward, _rank, Objective.KILL);
             enemyID = _enemyID;
             amount = _amount;
         }
@@ -158,12 +158,12 @@ public abstract class Mission {
             return super.toString() + " " + enemyID + " " + amount;
         }
 
-        public static KillMission Restore(UUID _missionID, UUID _questGiver, String _giverName, int _reward,
+        public static KillMission Restore(UUID _missionID, UUID _guildCityUUID, String _giverName, int _reward,
                                           long _creationTime,
                                           int _rank, boolean _completed, boolean _handedOut, int _enemyID,
                                           int _amount) {
             KillMission m = new KillMission(_enemyID, _amount);
-            m.Set(_missionID, _questGiver, _giverName, _reward, _creationTime, _rank, _completed, _handedOut);
+            m.Set(_missionID, _guildCityUUID, _giverName, _reward, _creationTime, _rank, _completed, _handedOut);
             return m;
         }
     }
@@ -177,8 +177,8 @@ public abstract class Mission {
             areaID = _areaID;
         }
 
-        public VisitAreaMission(UUID _questGiver, String _giverName, int _reward, int _rank, int _areaID) {
-            super(_questGiver, _giverName, _reward, _rank, Objective.VISIT_AREA);
+        public VisitAreaMission(UUID _guildCityUUID, String _giverName, int _reward, int _rank, int _areaID) {
+            super(_guildCityUUID, _giverName, _reward, _rank, Objective.VISIT_AREA);
             areaID = _areaID;
         }
 
@@ -187,11 +187,11 @@ public abstract class Mission {
             return super.toString() + " " + areaID;
         }
 
-        public static VisitAreaMission Restore(UUID _missionID, UUID _questGiver, String _giverName, int _reward,
+        public static VisitAreaMission Restore(UUID _missionID, UUID _guildCityUUID, String _giverName, int _reward,
                                                long _creationTime, int _rank, boolean _completed, boolean _handedOut,
                                                int _areaID) {
             VisitAreaMission m = new VisitAreaMission(_areaID);
-            m.Set(_missionID, _questGiver, _giverName, _reward, _creationTime, _rank, _completed, _handedOut);
+            m.Set(_missionID, _guildCityUUID, _giverName, _reward, _creationTime, _rank, _completed, _handedOut);
             return m;
         }
     }
@@ -207,9 +207,9 @@ public abstract class Mission {
             cityName = _cityName;
         }
 
-        public VisitCityMission(UUID _questGiver, String _giverName, int _reward, int _rank, UUID _city,
+        public VisitCityMission(UUID _guildCityUUID, String _giverName, int _reward, int _rank, UUID _city,
                                 String _cityName) {
-            super(_questGiver, _giverName, _reward, _rank, Objective.VISIT_CITY);
+            super(_guildCityUUID, _giverName, _reward, _rank, Objective.VISIT_CITY);
             city = _city;
             cityName = _cityName;
         }
@@ -219,11 +219,11 @@ public abstract class Mission {
             return super.toString() + " " + city + " " + cityName;
         }
 
-        public static VisitCityMission Restore(UUID _missionID, UUID _questGiver, String _giverName, int _reward,
+        public static VisitCityMission Restore(UUID _missionID, UUID _guildCityUUID, String _giverName, int _reward,
                                                long _creationTime, int _rank, boolean _completed, boolean _handedOut,
                                                UUID _city, String _cityName) {
             VisitCityMission m = new VisitCityMission(_city, _cityName);
-            m.Set(_missionID, _questGiver, _giverName, _reward, _creationTime, _rank, _completed, _handedOut);
+            m.Set(_missionID, _guildCityUUID, _giverName, _reward, _creationTime, _rank, _completed, _handedOut);
             return m;
         }
     }
@@ -237,8 +237,8 @@ public abstract class Mission {
             itemID = _itemID;
         }
 
-        public FetchMission(UUID _questGiver, String _giverName, int _reward, int _rank, int _itemID) {
-            super(_questGiver, _giverName, _reward, _rank, Objective.FETCH);
+        public FetchMission(UUID _guildCityUUID, String _giverName, int _reward, int _rank, int _itemID) {
+            super(_guildCityUUID, _giverName, _reward, _rank, Objective.FETCH);
             itemID = _itemID;
         }
 
@@ -247,11 +247,11 @@ public abstract class Mission {
             return super.toString() + " " + itemID;
         }
 
-        public static FetchMission Restore(UUID _missionID, UUID _questGiver, String _giverName, int _reward,
+        public static FetchMission Restore(UUID _missionID, UUID _guildCityUUID, String _giverName, int _reward,
                                            long _creationTime, int _rank, boolean _completed, boolean _handedOut,
                                            int _itemID) {
             FetchMission m = new FetchMission(_itemID);
-            m.Set(_missionID, _questGiver, _giverName, _reward, _creationTime, _rank, _completed, _handedOut);
+            m.Set(_missionID, _guildCityUUID, _giverName, _reward, _creationTime, _rank, _completed, _handedOut);
             return m;
         }
     }

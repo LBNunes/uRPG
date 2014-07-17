@@ -50,6 +50,7 @@ public abstract class SelectionWindow extends GameObject {
     protected Stopwatch         stopwatch;
     protected TileSet           window;
     protected Sprite            frame;
+    protected Integer           selectedIndex;
     protected int               x;
     protected int               y;
     protected int               width;
@@ -82,6 +83,7 @@ public abstract class SelectionWindow extends GameObject {
         lastMouseY = y;
         visible = true;
         frozen = false;
+        selectedIndex = -1;
     }
 
     @Override
@@ -166,6 +168,7 @@ public abstract class SelectionWindow extends GameObject {
                     }
                     if (o.selected) {
                         selected = o;
+                        selectedIndex = i;
                         o.Reset();
                     }
                 }
@@ -174,8 +177,13 @@ public abstract class SelectionWindow extends GameObject {
         }
     }
 
+    public Integer GetSelectedIndex() {
+        return selectedIndex;
+    }
+
     public void Reset() {
         selected = null;
+        selectedIndex = null;
         frozen = false;
         for (Option o : options) {
             o.Reset();

@@ -28,7 +28,6 @@
 package game;
 
 import java.util.ArrayList;
-import java.util.logging.Level;
 
 import org.unbiquitous.uImpala.engine.core.GameSettings;
 import org.unbiquitous.uImpala.engine.io.KeyboardManager;
@@ -36,21 +35,17 @@ import org.unbiquitous.uImpala.engine.io.MouseManager;
 import org.unbiquitous.uImpala.engine.io.ScreenManager;
 import org.unbiquitous.uImpala.engine.io.SpeakerManager;
 import org.unbiquitous.uImpala.jse.impl.core.Game;
-import org.unbiquitous.uos.core.UOSLogging;
 
 public class Main {
 
     @SuppressWarnings({ "serial" })
     public static void main(final String[] args) {
+        // UOSLogging.setLevel(Level.ALL);
+        EnvironmentInformation.Initialize(args);
+        InitializeTables(); // Initializing here prevents issues when loading saves
+
         Game.run(new GameSettings() {
             {
-                UOSLogging.setLevel(Level.ALL);
-                EnvironmentInformation.Initialize(args);
-                InitializeTables(); // Not really appropriate, but prevents initialization issues.
-                System.out.println("Running on Windows? " + EnvironmentInformation.IsWindows());
-                System.out.println("Has Battery? " + EnvironmentInformation.HasBattery());
-                System.out.println("Computer Name: " + EnvironmentInformation.GetComputerName());
-                System.out.println(EnvironmentInformation.GetFreeSpacePercentage());
 
                 if (args.length == 2 && args[0].equals("-rp"))
                     put("root_path", args[1]);

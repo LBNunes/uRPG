@@ -28,6 +28,5 @@
 package game;
 
 public interface Predicate<ArgType> {
-
     public boolean Eval(ArgType a);
 }

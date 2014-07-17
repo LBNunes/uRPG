@@ -51,7 +51,8 @@ public class AbilityWindow extends SelectionWindow {
 
     private ArrayList<Ability> list;
 
-    public AbilityWindow(AssetManager assets, String frame, int x, int y, ArrayList<Ability> list, Predicate<Ability> p) {
+    public AbilityWindow(AssetManager assets, String frame, int x, int y, ArrayList<Ability> list,
+                         Predicate<Ability> p, ArrayList<Integer> goldCost) {
         super(assets, frame, x, y, WINDOW_WIDTH, WINDOW_HEIGHT);
         mouse.connect(MouseSource.EVENT_BUTTON_DOWN, new Observation(this, "OnButtonDown"));
         mouse.connect(MouseSource.EVENT_BUTTON_UP, new Observation(this, "OnButtonUp"));
@@ -59,9 +60,10 @@ public class AbilityWindow extends SelectionWindow {
         for (int i = 0; i < list.size(); ++i) {
             Ability a = list.get(i);
             if (p.Eval(a)) {
-                options.add(new AbilityOption(assets, i, i, x + OPTION_OFFSET_X, y + OPTION_OFFSET_Y,
+                options.add(new AbilityOption(assets, options.size(), i, x + OPTION_OFFSET_X, y + OPTION_OFFSET_Y,
                                               WINDOW_WIDTH * this.frame.getWidth() / 3 - OPTION_OFFSET_X * 2,
-                                              (int) (this.frame.getHeight() * 1.2), a));
+                                              (int) (this.frame.getHeight() * 1.2), a,
+                                              goldCost == null ? 0 : goldCost.get(i)));
             }
         }
     }
@@ -125,17 +127,21 @@ public class AbilityWindow extends SelectionWindow {
         Text    name;
         Text    description;
         Text    stats;
+        Text    cost;
 
         Ability ability;
 
         public AbilityOption(AssetManager assets, int _index, int _originalIndex, int _baseX, int _baseY, int _w,
-                             int _h, Ability _ability) {
+                             int _h, Ability _ability, int _cost) {
             super(assets, _index, _originalIndex, _baseX, _baseY, _w, _h, false);
             ability = _ability;
             icon = assets.newSprite(PickIcon());
             name = assets.newText("font/seguisb.ttf", ability.name);
             description = assets.newText("font/seguisb.ttf", Describe());
             stats = assets.newText("font/seguisb.ttf", GetStats());
+            if (_cost > 0) {
+                cost = assets.newText("font/seguisb.ttf", "" + _cost + "G");
+            }
         }
 
         @Override
@@ -149,6 +155,14 @@ public class AbilityWindow extends SelectionWindow {
                                box.y + box.h / 2 - name.getHeight() / 2, Corner.TOP_LEFT);
             stats.render(screen, (int) (box.x + 0.10 * box.w + icon.getWidth() / 3),
                          box.y + box.h / 2 + name.getHeight() / 2, Corner.TOP_LEFT);
+
+            int mx = screen.getMouse().getX();
+            int my = screen.getMouse().getY();
+            if (cost != null) {
+                if (box.IsInside(mx, my)) {
+                    cost.render(screen, mx, my, Corner.TOP_LEFT);
+                }
+            }
         }
 
         @Override
@@ -173,7 +187,7 @@ public class AbilityWindow extends SelectionWindow {
         private String Describe() {
             String s = "";
             if (!ability.damaging) {
-                s += "Support magic for a";
+                s += "Support magic for a ";
             }
             else if (ability.damageType == DamageType.MAGICAL) {
                 s += "Offensive magic for a ";

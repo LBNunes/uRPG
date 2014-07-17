@@ -32,6 +32,9 @@ import game.Ability.DamageType;
 import game.Grid.GridArea;
 import game.Grid.HexColors;
 import game.Item.ItemSlot;
+import game.Mission.KillMission;
+import game.Mission.Objective;
+import game.Mission.VisitAreaMission;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -207,6 +210,20 @@ public class BattleScene extends GameObjectTreeScene {
 
         TextLog.instance.SetAssets(assets);
         TextLog.instance.Clear();
+
+        for (Mission m : playerData.missions) {
+            if (m.objective == Objective.VISIT_AREA) {
+                VisitAreaMission mm = (VisitAreaMission) m;
+                if (mm.completed) {
+                    continue;
+                }
+                if (area == mm.areaID) {
+                    mm.completed = true;
+                    TextLog.instance.Print("Completed a mission (visit the " + Area.GetArea(mm.areaID).GetName() + ")",
+                                           Color.white);
+                }
+            }
+        }
     }
 
     protected void update() {
@@ -418,7 +435,7 @@ public class BattleScene extends GameObjectTreeScene {
                                                       public boolean Eval(Ability a) {
                                                           return a.cost <= currentEntity.currentMP;
                                                       }
-                                                  });
+                                                  }, null);
                 currentStage = TurnStage.ABILITY_PICK;
                 HideActionButtons();
             }
@@ -439,7 +456,7 @@ public class BattleScene extends GameObjectTreeScene {
                                                 public boolean Eval(Item a) {
                                                     return a.IsUsable();
                                                 }
-                                            });
+                                            }, null);
                 currentStage = TurnStage.ITEM_PICK;
                 HideActionButtons();
             }
@@ -932,6 +949,25 @@ public class BattleScene extends GameObjectTreeScene {
                                     grid.FindHexPosition(playerUnits.get(0).pos.x, playerUnits.get(0).pos.y));
                 animationQueue.Push("Obtained one " + item.GetName() + "!", Color.white);
                 playerData.inventory.AddItem(item.GetID(), 1);
+            }
+        }
+
+        for (Mission m : playerData.missions) {
+            if (m.objective == Objective.KILL) {
+                KillMission mm = (KillMission) m;
+                if (mm.completed) {
+                    continue;
+                }
+                for (Enemy e : slainEnemies) {
+                    if (e.id == mm.enemyID) {
+                        mm.amount -= 1;
+                        if (mm.amount <= 0) {
+                            mm.amount = 0;
+                            mm.completed = true;
+                            TextLog.instance.Print("Completed a mission (kill " + e.type + ")", Color.white);
+                        }
+                    }
+                }
             }
         }
     }

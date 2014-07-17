@@ -43,6 +43,7 @@ public class Enemy {
     private static HashMap<Integer, Enemy> table      = new HashMap<Integer, Enemy>();
     private static ArrayList<String>       enemyNames = new ArrayList<String>();
 
+    public int                             id;
     public String                          type;
     public String                          sprite;
     public ClassID                         classID;
@@ -53,9 +54,10 @@ public class Enemy {
     public float                           aggro;
     public ArrayList<Loot>                 possibleLoot;
 
-    private Enemy(String _type, String _sprite, ClassID _classID, int _moveRange,
+    private Enemy(int _id, String _type, String _sprite, ClassID _classID, int _moveRange,
                   int _HP, int _MP, int _atk, int _def, int _mag, int _res, int _spd,
                   int _rank, boolean _boss, float _aggro) {
+        id = _id;
         type = _type;
         sprite = _sprite;
         classID = _classID;
@@ -188,7 +190,7 @@ public class Enemy {
                 _boss = Integer.parseInt(tokenizer.nextToken()) != 0;
                 _aggro = Float.parseFloat(tokenizer.nextToken());
 
-                table.put(_id, new Enemy(_type, _sprite, _class, _move,
+                table.put(_id, new Enemy(_id, _type, _sprite, _class, _move,
                                          _HP, _MP, _atk, _def, _mag, _res, _spd,
                                          _rank, _boss, _aggro));
             }

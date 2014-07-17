@@ -325,6 +325,13 @@ public class Entity {
         return exp.get(jobLevel);
     }
 
+    public void Promote(AssetManager assets, ClassID promotion) {
+        classID = promotion;
+        className = Classes.GetClassName(promotion);
+        RecalculateStats();
+        LoadSprites(assets);
+    }
+
     public static void InitNames() {
         FileInputStream f;
         try {

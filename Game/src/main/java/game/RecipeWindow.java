@@ -32,7 +32,7 @@ public class RecipeWindow extends SelectionWindow {
             Recipe r = list.get(i);
             options.add(new RecipeOption(assets, i, i, x + OPTION_OFFSET_X, y + OPTION_OFFSET_Y,
                                          WINDOW_WIDTH * this.frame.getWidth() / 3 - OPTION_OFFSET_X * 2,
-                                         (int) (this.frame.getHeight() * 0.7), r));
+                                         (int) (this.frame.getHeight() * 1.0), r));
         }
     }
 
@@ -97,10 +97,15 @@ public class RecipeWindow extends SelectionWindow {
 
         public RecipeOption(AssetManager assets, int _index, int _originalIndex, int _baseX, int _baseY, int _w,
                             int _h, Recipe _recipe) {
-            super(assets, _index, _originalIndex, _baseX, _baseY, _w, _h, false, Item.GetItem(_recipe.itemID), 1);
+            super(assets, _index, _originalIndex, _baseX, _baseY, _w, _h, false, Item.GetItem(_recipe.itemID), 1, 0);
             recipe = _recipe;
+
+            System.out.println("Recipe for item " + recipe.itemID + "(" + recipe.components.size() + " components)");
+
+            components = new ArrayList<Text>();
             for (Integer component : recipe.components) {
-                components.add(assets.newText("font/seguisb.ttf", Item.GetItem(component).GetName()));
+                Item i = Item.GetItem(component);
+                components.add(assets.newText("font/seguisb.ttf", i.GetName()));
             }
         }
 

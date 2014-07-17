@@ -27,11 +27,6 @@
 
 package game;
 
-import game.Classes.ClassID;
-
-import java.util.List;
-import java.util.UUID;
-
 import org.unbiquitous.uImpala.engine.asset.Text;
 import org.unbiquitous.uImpala.engine.core.Game;
 import org.unbiquitous.uImpala.engine.core.GameComponents;
@@ -46,11 +41,6 @@ import org.unbiquitous.uImpala.util.observer.Event;
 import org.unbiquitous.uImpala.util.observer.Observation;
 import org.unbiquitous.uImpala.util.observer.Subject;
 import org.unbiquitous.uos.core.adaptabitilyEngine.Gateway;
-import org.unbiquitous.uos.core.adaptabitilyEngine.ServiceCallException;
-import org.unbiquitous.uos.core.driverManager.DriverData;
-import org.unbiquitous.uos.core.messageEngine.dataType.UpDevice;
-import org.unbiquitous.uos.core.messageEngine.messages.Call;
-import org.unbiquitous.uos.core.messageEngine.messages.Response;
 
 public class CityServer extends GameScene {
 
@@ -66,7 +56,6 @@ public class CityServer extends GameScene {
     private long           lastRefresh;
 
     public CityServer() {
-
         screen = GameComponents.get(ScreenManager.class).create();
         screen.open("uRPG", 200, 100, false, Config.WINDOW_ICON);
         GameComponents.put(Screen.class, screen);
@@ -90,29 +79,6 @@ public class CityServer extends GameScene {
         if (screen.isCloseRequested()) {
             CityData.Save();
             GameComponents.get(Game.class).quit();
-        }
-
-        long time = System.currentTimeMillis();
-        if (time - lastRefresh > 15000) {
-            lastRefresh = time;
-            try {
-                List<DriverData> userDrivers = gateway.listDrivers("uRPG.userDriver");
-                if (userDrivers == null || userDrivers.size() == 0) {
-                    System.out.println("No users connected.");
-                    return;
-                }
-                UpDevice device = userDrivers.get(0).getDevice();
-                Call call = new Call("uRPG.userDriver", "GetUserInfo");
-                Response response = gateway.callService(device, call);
-                UUID uuid = (UUID) response.getResponseData("uuid");
-                String leader = (String) response.getResponseData("leaderName");
-                ClassID classID = (ClassID) response.getResponseData("leaderClass");
-                System.out.println("Found party led by " + leader + ", the " + Classes.GetClassName(classID));
-
-            }
-            catch (ServiceCallException e) {
-                e.printStackTrace();
-            }
         }
     }
 

@@ -27,9 +27,14 @@
 
 package game;
 
-import java.util.ArrayList;
-import java.util.Random;
+import game.Classes.ClassID;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.UUID;
+
+import org.unbiquitous.uImpala.engine.asset.AssetManager;
 import org.unbiquitous.uImpala.engine.asset.Sprite;
 import org.unbiquitous.uImpala.engine.asset.Text;
 import org.unbiquitous.uImpala.engine.core.Game;
@@ -41,53 +46,65 @@ import org.unbiquitous.uImpala.engine.io.ScreenManager;
 import org.unbiquitous.uImpala.util.Color;
 import org.unbiquitous.uImpala.util.Corner;
 import org.unbiquitous.uos.core.adaptabitilyEngine.Gateway;
+import org.unbiquitous.uos.core.adaptabitilyEngine.ServiceCallException;
+import org.unbiquitous.uos.core.driverManager.DriverData;
+import org.unbiquitous.uos.core.messageEngine.dataType.UpDevice;
+import org.unbiquitous.uos.core.messageEngine.messages.Call;
+import org.unbiquitous.uos.core.messageEngine.messages.Response;
 
 public class WorldMapScene extends GameScene {
 
-    private Screen            screen;
-    private GameRenderers     renderers;
-    private Gateway           gateway;
+    private Screen                   screen;
+    private GameRenderers            renderers;
+    private Gateway                  gateway;
 
-    private PlayerData        data;
+    private PlayerData               data;
 
-    private Sprite            bg;
-    private Text              regionText;
-    private int[]             areas;
-    private String            regionName;
-    private ArrayList<Button> areaButtons;
-    private ArrayList<Button> cityButtons;
-    private Button            itemsButton;
-    private Button            partyButton;
-    private Button            missionsButton;
-    private Point[]           locations = { new Point(314, 214),
-                                        new Point(620, 592),
-                                        new Point(1020, 378),
-                                        new Point(534, 384),
-                                        new Point(758, 184),
-                                        new Point(370, 550),
-                                        new Point(780, 385),
-                                        new Point(950, 562),
-                                        new Point(1060, 200),
-                                        new Point(225, 378),
-                                        new Point(130, 555),
-                                        new Point(513, 200)
-                                        };
+    private Sprite                   bg;
+    private Text                     regionText;
+    private int[]                    areas;
+    private String                   regionName;
+    private ArrayList<Button>        areaButtons;
+    private ArrayList<Button>        cityButtons;
+    private Button                   itemsButton;
+    private Button                   partyButton;
+    private Button                   missionsButton;
+    private Point[]                  locations   = { new Point(314, 214),
+                                                 new Point(620, 592),
+                                                 new Point(1020, 378),
+                                                 new Point(534, 384),
+                                                 new Point(758, 184),
+                                                 new Point(370, 550),
+                                                 new Point(780, 385),
+                                                 new Point(950, 562),
+                                                 new Point(1060, 200),
+                                                 new Point(225, 378),
+                                                 new Point(130, 555),
+                                                 new Point(513, 200)
+                                                 };
 
-    private boolean           isDay;
-    private Sprite            dayNightIcon;
-    private Sprite            goldIcon;
-    private Sprite            energyIcon;
-    private Text              playerGold;
-    private Text              playerEnergy;
-    private int               maxEnergy;
+    private boolean                  isDay;
+    private Sprite                   dayNightIcon;
+    private Sprite                   goldIcon;
+    private Sprite                   energyIcon;
+    private Text                     playerGold;
+    private Text                     playerEnergy;
+    private int                      maxEnergy;
+    private long                     lastCityRefresh;
+    private ArrayList<CityWorldInfo> cities;
+
+    public static AssetManager       worldAssets = null; // Kludge
 
     public WorldMapScene() {
+
         // Initialize the screen manager
         screen = GameComponents.get(ScreenManager.class).create();
         screen.open(Config.WINDOW_TITLE, Config.SCREEN_WIDTH,
                     Config.SCREEN_HEIGHT, Config.FULLSCREEN, Config.WINDOW_ICON);
         GameComponents.put(Screen.class, screen);
         gateway = GameComponents.get(Gateway.class);
+
+        TextLog.instance.SetAssets(assets);
 
         CheckDayNight();
 
@@ -99,10 +116,8 @@ public class WorldMapScene extends GameScene {
         }
 
         energyIcon = assets.newSprite(Config.ENERGY_ICON);
-        maxEnergy = (int) (Config.BASE_ENERGY * EnvironmentInformation.GetFreeSpacePercentage());
-        if (maxEnergy < 200) {
-            maxEnergy = 200;
-        }
+        maxEnergy = PlayerData.GetMaxEnergy();
+
         playerEnergy = assets.newText(Config.GOLD_FONT, "" + data.energy + " / " + maxEnergy);
         playerEnergy.options(null, Config.GOLD_SIZE, true);
 
@@ -125,11 +140,18 @@ public class WorldMapScene extends GameScene {
 
         CreateRegion(EnvironmentInformation.GetSSID());
 
-        TextLog.instance.SetAssets(assets);
+        cities = new ArrayList<CityWorldInfo>();
+        cityButtons = new ArrayList<Button>();
+        lastCityRefresh = 0;
+        RefreshCities(true);
+
+        worldAssets = assets;
     }
 
     @Override
     protected void update() {
+
+        RefreshCities(false);
 
         if (screen.isCloseRequested()) {
             PlayerData.Save();
@@ -163,12 +185,22 @@ public class WorldMapScene extends GameScene {
                         data.energy -= Config.ENERGY_PER_BATTLE;
                         PlayerData.Save();
                         GameComponents.get(Game.class).push(new BattleScene(areas[i], isDay));
+                        return; // So it won't scan cities too
                     }
                     else {
                         TextLog.instance.Print("Not enough energy! You need " + Config.ENERGY_PER_BATTLE + ".",
                                                Color.white);
                         areaButtons.get(i).Reset();
                     }
+                }
+            }
+            for (int i = 0; i < cityButtons.size(); ++i) {
+                if (cityButtons.get(i).WasPressed()) {
+                    // TODO: Check if city is still online
+                    this.frozen = true;
+                    this.visible = false;
+                    GameComponents.get(Game.class).push(new CityScene(cities.get(i)));
+                    return;
                 }
             }
         }
@@ -217,12 +249,11 @@ public class WorldMapScene extends GameScene {
             b.Reset();
         }
 
-        for (Button b : cityButtons) {
-            b.Reset();
-        }
+        RefreshCities(true);
 
         itemsButton.Reset();
         partyButton.Reset();
+        missionsButton.Reset();
 
         UpdateGold();
 
@@ -281,9 +312,6 @@ public class WorldMapScene extends GameScene {
             b.ShowTextOnMouseOver(true);
             areaButtons.add(b);
         }
-
-        // TODO: Add city discovery
-        cityButtons = new ArrayList<Button>();
     }
 
     private void UpdateGold() {
@@ -316,6 +344,62 @@ public class WorldMapScene extends GameScene {
                 data.lastRefresh = currentTime;
                 playerEnergy.setText("" + data.energy + " / " + maxEnergy);
             }
+        }
+    }
+
+    private void RefreshCities(boolean force) {
+        long time = System.currentTimeMillis();
+        if (force || time - lastCityRefresh > 20000) {
+            lastCityRefresh = time;
+            cities.clear();
+            cityButtons.clear();
+            try {
+                List<DriverData> cityDrivers = gateway.listDrivers("uRPG.cityDriver");
+                if (cityDrivers == null || cityDrivers.size() == 0) {
+                    System.out.println("No cities connected.");
+                    TextLog.instance.Print("No cities found yet...", Color.white);
+                    return;
+                }
+
+                for (DriverData d : cityDrivers) {
+                    UpDevice device = d.getDevice();
+                    Call call = new Call("uRPG.cityDriver", "GetCityInfo");
+                    Response response = gateway.callService(device, call);
+                    UUID uuid = UUID.fromString(response.getResponseString("uuid"));
+                    String name = response.getResponseString("name");
+                    int area = Integer.parseInt(response.getResponseString("area"));
+                    cities.add(new CityWorldInfo(uuid, name, area));
+                }
+
+                for (int i = areaButtons.size(); i < locations.length && i - areaButtons.size() < cities.size(); ++i) {
+                    CityWorldInfo info = cities.get(i - areaButtons.size());
+                    Button b = new Button(assets, "img/icon/cityicon.png", "The City of " + info.name,
+                                          Color.white, locations[i].x, locations[i].y);
+                    b.ShowTextOnMouseOver(true);
+                    cityButtons.add(b);
+                    TextLog.instance.Print("Found the city of " + info.name + "!", Color.white);
+
+                }
+            }
+            catch (ServiceCallException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public class CityWorldInfo {
+        UUID    uuid;
+        String  name;
+        int     areaID;
+        String  areaName;
+        ClassID academyClass;
+
+        public CityWorldInfo(UUID _uuid, String _name, int _areaID) {
+            uuid = _uuid;
+            name = _name;
+            areaID = _areaID;
+            areaName = Area.GetArea(areaID).GetName();
+            academyClass = Area.GetArea(areaID).GetClassBias();
         }
     }
 }

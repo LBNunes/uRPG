@@ -52,17 +52,18 @@ public class EntityWindow extends SelectionWindow {
     private ArrayList<Entity> list;
 
     public EntityWindow(AssetManager assets, String frame, int x, int y, ArrayList<Entity> list, boolean swappable,
-                        boolean equippable) {
+                        boolean equippable, ArrayList<Integer> goldCosts) {
         super(assets, frame, x, y, WINDOW_WIDTH, WINDOW_HEIGHT);
         mouse.connect(MouseSource.EVENT_BUTTON_DOWN, new Observation(this, "OnButtonDown"));
         mouse.connect(MouseSource.EVENT_BUTTON_UP, new Observation(this, "OnButtonUp"));
         this.list = list;
         for (int i = 0; i < list.size(); ++i) {
             Entity e = list.get(i);
-            options.add(new EntityOption(assets, i, i, x + OPTION_OFFSET_X, y + OPTION_OFFSET_Y,
+            options.add(new EntityOption(assets, options.size(), i, x + OPTION_OFFSET_X, y + OPTION_OFFSET_Y,
                                          WINDOW_WIDTH * this.frame.getWidth() / 3 - OPTION_OFFSET_X * 2,
                                          (int) (this.frame.getHeight() * 1.2),
-                                         swappable, equippable, e));
+                                         swappable, equippable, e, (goldCosts == null ? 0 : goldCosts.get(i))));
+
         }
     }
 
@@ -140,6 +141,7 @@ public class EntityWindow extends SelectionWindow {
         Text     name;
         Text     stats1;
         Text     stats2;
+        Text     cost;
 
         Entity   entity;
         ItemSlot slot;
@@ -147,7 +149,7 @@ public class EntityWindow extends SelectionWindow {
         boolean  equippable;
 
         public EntityOption(AssetManager assets, int _index, int _originalIndex, int _baseX, int _baseY, int _w,
-                            int _h, boolean _swappable, boolean _equippable, Entity _entity) {
+                            int _h, boolean _swappable, boolean _equippable, Entity _entity, int _cost) {
             super(assets, _index, _originalIndex, _baseX, _baseY, _w, _h, _swappable);
             entity = _entity;
             icon = entity.sp;
@@ -167,6 +169,13 @@ public class EntityWindow extends SelectionWindow {
             stats2 = assets.newText("font/seguisb.ttf", entity.stats.atk + " Atk / " + entity.stats.def + " Def / " +
                                                         entity.stats.mag + " Mag / " + entity.stats.res + " Res / " +
                                                         entity.stats.spd + " Spd");
+            if (_cost > 0) {
+                cost = assets.newText("font/seguisb.ttf", "" + _cost + "G");
+            }
+            else {
+                cost = null;
+            }
+
             slot = ItemSlot.NONE;
 
             swapBox.y -= swapBox.w / 2;
@@ -196,6 +205,14 @@ public class EntityWindow extends SelectionWindow {
                           box.y + box.h / 2 - name.getHeight() / 2, Corner.TOP_LEFT);
             stats2.render(screen, (int) (box.x + 0.10 * box.w + icon.getWidth() / 3),
                           box.y + box.h / 2 + name.getHeight() / 2, Corner.TOP_LEFT);
+
+            int mx = screen.getMouse().getX();
+            int my = screen.getMouse().getY();
+            if (cost != null) {
+                if (box.IsInside(mx, my)) {
+                    cost.render(screen, mx, my, Corner.TOP_LEFT);
+                }
+            }
         }
 
         @Override

@@ -34,11 +34,14 @@ public class Recipe {
         }
 
         for (Recipe r : recipes) {
+            boolean ok = true;
             for (Integer component : r.components) {
-                if (present[component]) {
-                    list.add(r);
+                if (!present[component]) {
+                    ok = false;
                 }
             }
+            if (ok)
+                list.add(r);
         }
 
         return list;
@@ -57,7 +60,9 @@ public class Recipe {
             String line;
 
             int itemID;
-            ArrayList<Integer> components = new ArrayList<Integer>();
+            ArrayList<Integer> components;
+
+            int length;
 
             while (s.hasNextLine()) {
                 line = s.nextLine();
@@ -69,14 +74,16 @@ public class Recipe {
                 StringTokenizer tokenizer = new StringTokenizer(line, " ");
 
                 itemID = Integer.parseInt(tokenizer.nextToken());
+                components = new ArrayList<Integer>();
+                length = Integer.parseInt(tokenizer.nextToken());
 
-                while (tokenizer.hasMoreTokens()) {
+                for (int i = 0; i < length; ++i) {
                     components.add(Integer.parseInt(tokenizer.nextToken()));
                 }
 
                 recipes.add(new Recipe(itemID, components));
             }
-
+            // DumpTable();
             s.close();
             f.close();
         }
@@ -89,4 +96,13 @@ public class Recipe {
         }
     }
 
+    public static void DumpTable() {
+        for (Recipe r : recipes) {
+            System.out.print(r.itemID + " --- ");
+            for (Integer i : r.components) {
+                System.out.print(i + " ");
+            }
+            System.out.println("");
+        }
+    }
 }

@@ -37,7 +37,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Scanner;
 import java.util.StringTokenizer;
@@ -45,23 +44,24 @@ import java.util.UUID;
 
 public class PlayerData {
 
-    private static PlayerData instance = null;
+    private static PlayerData   instance  = null;
+    private static int          maxEnergy = 200;
 
-    public UUID               uuid;
-    public int                gold;
-    public int                energy;
-    public long               lastRefresh;
-    public ArrayList<Entity>  party;
-    public Inventory          inventory;
-    public ArrayList<Mission> missions;
-    public HashSet<KnownCity> knownCities;
+    public UUID                 uuid;
+    public int                  gold;
+    public int                  energy;
+    public long                 lastRefresh;
+    public ArrayList<Entity>    party;
+    public Inventory            inventory;
+    public ArrayList<Mission>   missions;
+    public ArrayList<KnownCity> knownCities;
 
     private PlayerData() {
         uuid = null;
         party = new ArrayList<Entity>();
         inventory = new Inventory();
         missions = new ArrayList<Mission>();
-        knownCities = new HashSet<KnownCity>();
+        knownCities = new ArrayList<KnownCity>();
     }
 
     public static PlayerData GetData() {
@@ -69,6 +69,13 @@ public class PlayerData {
             instance = Load();
         }
         return instance;
+    }
+
+    public static int GetMaxEnergy() {
+        if (instance == null) {
+            instance = Load(); // Guarantees initialization
+        }
+        return maxEnergy;
     }
 
     private static PlayerData Load() {
@@ -157,11 +164,8 @@ public class PlayerData {
             for (int i = 0; i < nKnownCities; i++) {
 
                 line = s.nextLine();
-                tokenizer = new StringTokenizer(line, " ");
 
-                data.knownCities.add(new KnownCity(UUID.fromString(tokenizer.nextToken()),
-                                                   tokenizer.nextToken(),
-                                                   Long.parseLong(tokenizer.nextToken())));
+                data.knownCities.add(KnownCity.FromString(line));
             }
 
             s.close();
@@ -173,6 +177,11 @@ public class PlayerData {
         catch (IOException e) {
             System.out.println("FATAL ERROR: Save file corrupted!");
             System.exit(1);
+        }
+
+        maxEnergy = (int) (Config.BASE_ENERGY * EnvironmentInformation.GetFreeSpacePercentage());
+        if (maxEnergy < 200) {
+            maxEnergy = 200;
         }
 
         return data;
@@ -264,6 +273,12 @@ public class PlayerData {
     }
 
     public static void DiscoverCity(UUID cityUUID, String cityName) {
+        for (KnownCity kc : instance.knownCities) {
+            if (kc.cityUUID.equals(cityUUID)) {
+                kc.timestamp = System.currentTimeMillis();
+                return;
+            }
+        }
         instance.knownCities.add(new KnownCity(cityUUID, cityName, System.currentTimeMillis()));
     }
 
@@ -276,6 +291,13 @@ public class PlayerData {
         @Override
         public String toString() {
             return cityUUID.toString() + " " + cityName.toString() + " " + timestamp;
+        }
+
+        public static KnownCity FromString(String s) {
+            StringTokenizer tokenizer = new StringTokenizer(s, " ");
+            return new KnownCity(UUID.fromString(tokenizer.nextToken()),
+                                 tokenizer.nextToken(),
+                                 Long.parseLong(tokenizer.nextToken()));
         }
 
         @Override

@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.StringTokenizer;
@@ -60,10 +61,10 @@ public class CityData {
     int                      affinityAreaID;
     long                     lastRefresh;
     ArrayList<Mission>       guildMissions;
-    ArrayList<Transaction>   marketTransactions;
+    LinkedList<Transaction>  marketTransactions;
     ArrayList<Entity>        recruits;
     HashSet<KnownCity>       knownCities;
-    HashSet<PlayerVisit>     playerVisits;
+    ArrayList<PlayerVisit>   playerVisits;
 
     public static final long ONE_DAY_MILISECONDS = 24 * 60 * 60 * 1000;
 
@@ -72,10 +73,10 @@ public class CityData {
         name = EnvironmentInformation.GetComputerName();
         academyClass = ClassID.NONE;
         guildMissions = new ArrayList<Mission>();
-        marketTransactions = new ArrayList<Transaction>();
+        marketTransactions = new LinkedList<Transaction>();
         recruits = new ArrayList<Entity>();
         knownCities = new HashSet<KnownCity>();
-        playerVisits = new HashSet<PlayerVisit>();
+        playerVisits = new ArrayList<PlayerVisit>();
         lastRefresh = 0;
     }
 
@@ -128,7 +129,7 @@ public class CityData {
             for (int i = 0; i < nTransactions; ++i) {
                 line = s.nextLine();
                 tokenizer = new StringTokenizer(line, " ");
-                data.marketTransactions.add(new Transaction(line));
+                data.marketTransactions.add(Transaction.FromString(line));
             }
 
             line = s.nextLine();
@@ -253,10 +254,63 @@ public class CityData {
         return data;
     }
 
-    public void DiscoverCity(UUID cityUUID, String cityName) {
-        if (!cityUUID.equals(uuid)) {
-            knownCities.add(new KnownCity(cityUUID, cityName, System.currentTimeMillis()));
+    public void DiscoverCity(KnownCity k) {
+        final int ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
+        if (!k.cityUUID.equals(uuid) && System.currentTimeMillis() - k.timestamp < ONE_WEEK) {
+            knownCities.add(k);
         }
+    }
+
+    public void DiscoverPlayer(UUID playerUUID, int averageLevel, int totalLevel) {
+        for (PlayerVisit p : playerVisits) {
+            if (p.playerUUID.equals(playerUUID)) {
+                p.averageLevel = averageLevel;
+                p.totalLevel = totalLevel;
+                return;
+            }
+        }
+        PlayerVisit p = new PlayerVisit(playerUUID, averageLevel, totalLevel);
+        playerVisits.add(p);
+    }
+
+    public boolean ApproveEnergyRestore(UUID playerUUID) {
+        for (PlayerVisit p : playerVisits) {
+            if (p.playerUUID.equals(playerUUID)) {
+                long time = System.currentTimeMillis();
+                if (time - p.lastEnergyRestore >= Config.MS_PER_CITY_RESTORE) {
+                    p.lastEnergyRestore = time;
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean ApproveMissionHandout(UUID playerUUID, UUID missionUUID) {
+        for (PlayerVisit p : playerVisits) {
+            if (p.playerUUID.equals(playerUUID)) {
+                long time = System.currentTimeMillis();
+                if (time - p.lastMissionHandout >= Config.MS_PER_CITY_RESTORE) {
+                    for (Mission m : guildMissions) {
+                        if (m.missionID.equals(missionUUID) && !m.completed) {
+                            p.lastEnergyRestore = time;
+                            m.handedOut = true;
+                            return true;
+                        }
+                        else {
+                            return false;
+                        }
+                    }
+                }
+                else {
+                    return false;
+                }
+            }
+        }
+        return false;
     }
 
     private void PickClass() {
@@ -266,6 +320,7 @@ public class CityData {
 
         affinityAreaID = areas[index];
         academyClass = Area.GetArea(affinityAreaID).GetClassBias();
+        System.out.println("Rolled " + index + ": " + Area.GetArea(affinityAreaID).GetName());
     }
 
     private void GenerateMissions() {
@@ -374,12 +429,12 @@ public class CityData {
 
         Random rand = new Random();
 
-        int nPotions = rand.nextInt(4);
-        int nEthers = rand.nextInt(4);
-        int nElixirs = rand.nextInt(4) == 0 ? 1 : 0; // 25% of elixir spawning
-        int nWarrior = rand.nextInt(academyClass == ClassID.WARRIOR ? 4 : 2);
-        int nMage = rand.nextInt(academyClass == ClassID.MAGE ? 4 : 2);
-        int nRogue = rand.nextInt(academyClass == ClassID.ROGUE ? 4 : 2);
+        int nPotions = rand.nextInt(3) + 1;
+        int nEthers = rand.nextInt(3) + 1;
+        int nElixirs = rand.nextInt(10) == 0 ? 1 : 0; // 10% chance of elixir spawning
+        int nWarrior = rand.nextInt(academyClass == ClassID.WARRIOR ? 3 : 2);
+        int nMage = rand.nextInt(academyClass == ClassID.MAGE ? 3 : 2);
+        int nRogue = rand.nextInt(academyClass == ClassID.ROGUE ? 3 : 2);
         int nArmor = rand.nextInt(3);
 
         float itemFactor = (rand.nextInt(41) + 80) / (float) 100; // price is 80~120%
@@ -388,42 +443,42 @@ public class CityData {
         float armorFactor = itemFactor;
 
         int potionPrice = (int) (20 * itemFactor);
-        int etherPrice = (int) (50 * itemFactor);
-        int elixirPrice = (int) (300 * itemFactor);
+        int etherPrice = (int) (40 * itemFactor);
+        int elixirPrice = (int) (500 * itemFactor);
         int warriorPrice = (int) (150 * (academyClass == ClassID.WARRIOR ? nativeFactor : nonNativeFactor));
         int magePrice = (int) (150 * (academyClass == ClassID.MAGE ? nativeFactor : nonNativeFactor));
         int roguePrice = (int) (150 * (academyClass == ClassID.ROGUE ? nativeFactor : nonNativeFactor));
         int armorPrice = (int) (200 * armorFactor);
 
-        if (nPotions > 0) {
-            marketTransactions.add(new Transaction(this.uuid, 501, nPotions, potionPrice));
+        for (int i = 0; i < nPotions; ++i) {
+            marketTransactions.add(new Transaction(this.uuid, 501, potionPrice));
         }
 
-        if (nEthers > 0) {
-            marketTransactions.add(new Transaction(this.uuid, 541, nEthers, etherPrice));
+        for (int i = 0; i < nEthers; ++i) {
+            marketTransactions.add(new Transaction(this.uuid, 541, etherPrice));
         }
 
-        if (nElixirs > 0) {
-            marketTransactions.add(new Transaction(this.uuid, 581, nElixirs, elixirPrice));
+        for (int i = 0; i < nElixirs; ++i) {
+            marketTransactions.add(new Transaction(this.uuid, 581, elixirPrice));
         }
 
-        if (nWarrior > 0) {
-            marketTransactions.add(new Transaction(this.uuid, 1, nWarrior, warriorPrice));
-            marketTransactions.add(new Transaction(this.uuid, 51, nWarrior, warriorPrice));
+        for (int i = 0; i < nWarrior; ++i) {
+            marketTransactions.add(new Transaction(this.uuid, 1, warriorPrice));
+            marketTransactions.add(new Transaction(this.uuid, 51, warriorPrice));
         }
 
-        if (nMage > 0) {
-            marketTransactions.add(new Transaction(this.uuid, 101, nMage, magePrice));
-            marketTransactions.add(new Transaction(this.uuid, 151, nMage, magePrice));
+        for (int i = 0; i < nMage; ++i) {
+            marketTransactions.add(new Transaction(this.uuid, 101, magePrice));
+            marketTransactions.add(new Transaction(this.uuid, 151, magePrice));
         }
 
-        if (nRogue > 0) {
-            marketTransactions.add(new Transaction(this.uuid, 201, nRogue, roguePrice));
-            marketTransactions.add(new Transaction(this.uuid, 251, nRogue, roguePrice));
+        for (int i = 0; i < nRogue; ++i) {
+            marketTransactions.add(new Transaction(this.uuid, 201, roguePrice));
+            marketTransactions.add(new Transaction(this.uuid, 251, roguePrice));
         }
 
-        if (nArmor > 0) {
-            marketTransactions.add(new Transaction(this.uuid, 301, nArmor, armorPrice));
+        for (int i = 0; i < nArmor; ++i) {
+            marketTransactions.add(new Transaction(this.uuid, 301, armorPrice));
         }
     }
 
@@ -460,16 +515,16 @@ public class CityData {
             return;
         }
 
-        ArrayList<Transaction> oldTransactions = marketTransactions;
+        LinkedList<Transaction> oldTransactions = marketTransactions;
 
-        marketTransactions = new ArrayList<Transaction>();
+        marketTransactions = new LinkedList<Transaction>();
 
         CreateBasicTransactions();
 
         // Move all player transactions into the new list
         for (Transaction t : oldTransactions) {
             if (!uuid.equals(t.seller)) {
-                marketTransactions.add(t);
+                marketTransactions.addFirst(t);
             }
         }
 
@@ -481,7 +536,7 @@ public class CityData {
 
         // Move player and not expired completed missions
         for (Mission m : oldMissions) {
-            if (!uuid.equals(m.questGiver) || m.handedOut) {
+            if (!uuid.equals(m.guildCityUUID) || m.handedOut) {
                 guildMissions.add(m);
             }
         }
@@ -498,36 +553,40 @@ public class CityData {
     public static class Transaction {
         UUID    seller;
         int     item;
-        int     amount;
         int     value;
         boolean completed;
 
-        public Transaction(UUID _seller, int _item, int _amount, int _value) {
+        public Transaction(UUID _seller, int _item, int _value) {
             seller = _seller;
             item = _item;
-            amount = _amount;
             value = _value;
+            completed = false;
         }
 
-        public Transaction(String line) {
-            StringTokenizer tokenizer = new StringTokenizer(line, " ");
-            seller = new UUID(Long.parseLong(tokenizer.nextToken()),
-                              Long.parseLong(tokenizer.nextToken()));
-            item = Integer.parseInt(tokenizer.nextToken());
-            amount = Integer.parseInt(tokenizer.nextToken());
-            value = Integer.parseInt(tokenizer.nextToken());
-            completed = false;
+        public Transaction(UUID _seller, int _item, int _value, boolean _completed) {
+            seller = _seller;
+            item = _item;
+            value = _value;
+            completed = _completed;
         }
 
         @Override
         public String toString() {
             String s = new String();
-            s += "" + seller.getMostSignificantBits() + " " + seller.getLeastSignificantBits() + " ";
+            s += seller.toString() + " ";
             s += item + " ";
-            s += amount + " ";
-            s += value;
+            s += value + " ";
+            s += completed;
 
             return s;
+        }
+
+        public static Transaction FromString(String s) {
+            StringTokenizer tokenizer = new StringTokenizer(s, " ");
+            return new Transaction(UUID.fromString(tokenizer.nextToken()),
+                                   Integer.parseInt(tokenizer.nextToken()),
+                                   Integer.parseInt(tokenizer.nextToken()),
+                                   Boolean.parseBoolean(tokenizer.nextToken()));
         }
     }
 
@@ -552,8 +611,17 @@ public class CityData {
                    firstVisit + " " + lastEnergyRestore + " " + lastMissionHandout;
         }
 
-        public PlayerVisit(UUID _playerUUID, int _averageLevel, int _totalLevel,
-                           long _firstVisit, long _lastEnergyRestore, long _lastMissionHandout) {
+        public PlayerVisit(UUID _playerUUID, int _averageLevel, int _totalLevel) {
+            playerUUID = _playerUUID;
+            averageLevel = _averageLevel;
+            totalLevel = _totalLevel;
+            firstVisit = System.currentTimeMillis();
+            lastEnergyRestore = 0;
+            lastMissionHandout = 0;
+        }
+
+        public PlayerVisit(UUID _playerUUID, int _averageLevel, int _totalLevel, long _firstVisit,
+                           long _lastEnergyRestore, long _lastMissionHandout) {
             playerUUID = _playerUUID;
             averageLevel = _averageLevel;
             totalLevel = _totalLevel;

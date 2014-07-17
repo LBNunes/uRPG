@@ -188,9 +188,9 @@ public class MissionWindow extends SelectionWindow {
                 case FETCH:
                     return "img/craft.png";
                 case VISIT_AREA:
-                    return "img/visit_area.png";
+                    return "img/visitarea.png";
                 case VISIT_CITY:
-                    return "img/visit_city.png";
+                    return "img/visitcity.png";
                 case KILL:
                 default:
                     return "img/weapon.png";

@@ -67,8 +67,8 @@ public class UserDriver implements UosDriver {
     }
 
     public void GetUserInfo(Call call, Response response, CallContext context) {
-        response.addParameter("uuid", data.uuid);
+        response.addParameter("uuid", data.uuid.toString());
         response.addParameter("leaderName", data.party.get(0).name);
-        response.addParameter("leaderClass", data.party.get(0).classID);
+        response.addParameter("leaderClass", data.party.get(0).classID.toString());
     }
 }
