@@ -46,7 +46,6 @@ import org.unbiquitous.uos.core.messageEngine.messages.Response;
 
 public class CityDriver implements UosDriver {
 
-    private CityData data;
     private UpDriver driver;
 
     public CityDriver() {
@@ -59,6 +58,7 @@ public class CityDriver implements UosDriver {
         driver.addService("RequestTransactionList");
         driver.addService("RequestTransaction");
         driver.addService("RequestCompletedTransactions");
+        driver.addService("CreateTransaction");
         driver.addService("RequestMissionList");
         driver.addService("RequestMission");
         driver.addService("RequestReward");
@@ -66,7 +66,6 @@ public class CityDriver implements UosDriver {
 
     public void init(Gateway gateway, InitialProperties properties, String instanceId) {
         System.out.println("Starting up City Driver...");
-        data = CityData.GetData();
     }
 
     public UpDriver getDriver() {
@@ -88,6 +87,8 @@ public class CityDriver implements UosDriver {
     }
 
     public void GetCityInfo(Call call, Response response, CallContext context) {
+        CityData data = CityData.GetData();
+
         response.addParameter("uuid", data.uuid.toString());
         response.addParameter("name", data.name);
         response.addParameter("area", "" + data.affinityAreaID);
@@ -95,6 +96,8 @@ public class CityDriver implements UosDriver {
     }
 
     public void IntroducePlayer(Call call, Response response, CallContext context) {
+        CityData data = CityData.GetData();
+
         UUID uuid = UUID.fromString(call.getParameterString("uuid"));
         int averageLevel = Integer.parseInt(call.getParameterString("averageLevel"));
         int totalLevel = Integer.parseInt(call.getParameterString("totalLevel"));
@@ -115,6 +118,8 @@ public class CityDriver implements UosDriver {
     }
 
     public void RequestEnergyRestore(Call call, Response response, CallContext context) {
+        CityData data = CityData.GetData();
+
         UUID uuid = UUID.fromString(call.getParameterString("uuid"));
         boolean ok = data.ApproveEnergyRestore(uuid);
         response.addParameter("confirmation", "" + ok);
@@ -128,6 +133,8 @@ public class CityDriver implements UosDriver {
     }
 
     public void RequestRecruitList(Call call, Response response, CallContext context) {
+        CityData data = CityData.GetData();
+
         String[] recruits = new String[data.recruits.size()];
 
         for (int i = 0; i < data.recruits.size(); ++i) {
@@ -140,6 +147,8 @@ public class CityDriver implements UosDriver {
     }
 
     public void RequestRecruit(Call call, Response response, CallContext context) {
+        CityData data = CityData.GetData();
+
         String name = call.getParameterString("name");
 
         for (Entity e : data.recruits) {
@@ -156,43 +165,59 @@ public class CityDriver implements UosDriver {
     }
 
     public void RequestTransactionList(Call call, Response response, CallContext context) {
-        String[] transactions = new String[data.marketTransactions.size()];
+        CityData data = CityData.GetData();
 
-        int idx = 0;
+        ArrayList<String> transactions = new ArrayList<String>();
+
         for (Transaction t : data.marketTransactions) {
             if (!t.completed) {
-                transactions[idx] = t.toString();
-                ++idx;
+                transactions.add(t.toString());
             }
         }
 
-        response.addParameter("length", idx);
         response.addParameter("transactions", transactions);
-        Log("Sent out transactions list. Size: " + idx);
+        Log("Sent out transactions list. Size: " + transactions.size());
     }
 
     public void RequestTransaction(Call call, Response response, CallContext context) {
-        UUID seller = UUID.fromString(response.getResponseString("sellerUUID"));
-        int item = Integer.parseInt(response.getResponseString("item"));
-        int price = Integer.parseInt(response.getResponseString("price"));
+        CityData data = CityData.GetData();
+
+        Log("Transaction request...");
+
+        UUID seller = UUID.fromString(call.getParameterString("sellerUUID"));
+        int item = (Integer) call.getParameter("item");
+        int price = (Integer) call.getParameter("price");
+
+        Transaction sought = null;
+
+        Log("Searching for transaction " + seller.toString() + " " + item + " " + price);
 
         for (Transaction t : data.marketTransactions) {
+            Log("Compare to " + t.seller.toString() + " " + t.item + " " + t.value + " " + t.completed);
             if (t.seller.equals(seller) && t.item == item && t.value == price && !t.completed) {
-                response.addParameter("confirmation", "" + true);
-                t.completed = true;
-                Log("Approved sale of one " + Item.GetItem(item).GetName() + " belonging to " + seller.toString() +
-                    " for " + price + "G.");
-                CityData.Save();
-                return;
+                Log("Found!");
+                sought = t;
+                break;
             }
         }
-        response.addParameter("confirmation", "" + false);
-        Log("Denied sale of one " + Item.GetItem(item).GetName() + " belonging to " + seller.toString() + " for " +
-            price + "G.");
+        if (sought == null) {
+            response.addParameter("confirmation", "" + false);
+            Log("Denied sale of one " + Item.GetItem(item).GetName() + " belonging to " + seller.toString() + " for " +
+                price + "G.");
+        }
+        else {
+            response.addParameter("confirmation", "" + true);
+            sought.completed = true;
+            Log("Approved sale of one " + Item.GetItem(item).GetName() + " belonging to " + seller.toString() +
+                " for " + price + "G.");
+            CityData.Save();
+        }
     }
 
     public void RequestCompletedTransactions(Call call, Response response, CallContext context) {
-        UUID playerUUID = UUID.fromString(response.getResponseString("playerUUID"));
+        CityData data = CityData.GetData();
+
+        UUID playerUUID = UUID.fromString(call.getParameterString("playerUUID"));
         ArrayList<String> transactions = new ArrayList<String>();
 
         Iterator<Transaction> i = data.marketTransactions.iterator();
@@ -210,20 +235,41 @@ public class CityDriver implements UosDriver {
         Log("Sent out completed transactions from player " + playerUUID.toString() + ". Size: " + transactions.size());
     }
 
-    public void RequestMissionList(Call call, Response response, CallContext context) {
-        String[] missions = new String[data.guildMissions.size()];
+    public void CreateTransaction(Call call, Response response, CallContext context) {
 
-        for (int i = 0; i < data.guildMissions.size(); ++i) {
-            missions[i] = data.guildMissions.get(i).toString();
+        CityData data = CityData.GetData();
+
+        UUID playerUUID = UUID.fromString(call.getParameterString("playerUUID"));
+        int item = (Integer) call.getParameter("item");
+        int price = (Integer) call.getParameter("price");
+
+        data.marketTransactions.addFirst(new Transaction(playerUUID, item, price));
+        CityData.Save();
+        Log("Inserted new transaction by player " + playerUUID.toString());
+
+        response.addParameter("confirmation", true);
+    }
+
+    public void RequestMissionList(Call call, Response response, CallContext context) {
+        CityData data = CityData.GetData();
+
+        ArrayList<String> missions = new ArrayList<String>();
+
+        for (Mission m : data.guildMissions) {
+            if (!m.completed) {
+                missions.add(m.toString());
+            }
         }
 
         response.addParameter("missions", missions);
-        Log("Sent out mission list. Size: " + missions.length);
+        Log("Sent out mission list. Size: " + missions.size());
     }
 
     public void RequestMission(Call call, Response response, CallContext context) {
-        UUID missionID = UUID.fromString(response.getResponseString("missionID"));
-        UUID playerUUID = UUID.fromString(response.getResponseString("playerUUID"));
+        CityData data = CityData.GetData();
+
+        UUID missionID = UUID.fromString(call.getParameterString("missionID"));
+        UUID playerUUID = UUID.fromString(call.getParameterString("playerUUID"));
 
         PlayerVisit player = null;
 
@@ -269,6 +315,8 @@ public class CityDriver implements UosDriver {
     }
 
     public void RequestReward(Call call, Response response, CallContext context) {
+        CityData data = CityData.GetData();
+
         UUID missionID = UUID.fromString(call.getParameterString("missionID"));
         for (Mission m : data.guildMissions) {
             if (m.missionID.equals(missionID)) {
@@ -280,7 +328,7 @@ public class CityDriver implements UosDriver {
                 }
                 else {
                     response.addParameter("confirmation", "" + false);
-                    Log("Denied mission " + missionID.toString() + " 's reward to player (completed)");
+                    Log("Denied mission " + missionID.toString() + " 's reward to player (already completed)");
                     return;
                 }
             }

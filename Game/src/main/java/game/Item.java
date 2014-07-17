@@ -85,17 +85,26 @@ public class Item {
             }
         });
 
-        Item selected = null;
-        int deltaRank = 9999999;
-        for (Item it : list) {
-            int itemRank = it.GetRank();
-            if (Math.abs(itemRank - rank) < deltaRank) {
-                deltaRank = Math.abs(itemRank - rank);
-                selected = it;
+        ArrayList<Item> selected = new ArrayList<Item>();
+        while (selected.size() < 5) {
+
+            int deltaRank = 9999999;
+            Item selection = null;
+
+            for (Item it : list) {
+                if (it.GetID() == 000 || selected.contains(it))
+                    continue;
+                int itemRank = it.GetRank();
+                if (Math.abs(itemRank - rank) < deltaRank) {
+                    deltaRank = Math.abs(itemRank - rank);
+                    selection = it;
+                }
             }
+
+            selected.add(selection);
         }
 
-        return selected.GetID();
+        return selected.get((int) (Math.random() * selected.size())).GetID();
     }
 
     public int GetID() {

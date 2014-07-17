@@ -44,6 +44,7 @@ public class MarketScene extends GameScene {
     private Button                 sellButton;
 
     private ItemWindow             itemWindow;
+    private TextInput              textInput;
     private ArrayList<Transaction> transactions;
 
     public MarketScene(CityWorldInfo info) {
@@ -68,6 +69,7 @@ public class MarketScene extends GameScene {
 
         itemWindow = null;
         transactions = null;
+        textInput = null;
 
         ArrayList<Transaction> ct = RequestCompletedTransactions();
 
@@ -86,25 +88,46 @@ public class MarketScene extends GameScene {
 
         if (itemWindow != null) {
             itemWindow.update();
-            Integer idx = itemWindow.GetSelectedIndex();
-            if (idx != null) {
-                if (data.gold >= transactions.get(idx).value) {
-                    if (RequestTransaction(idx)) {
-                        data.gold -= transactions.get(idx).value;
-                        data.inventory.AddItem(transactions.get(idx).item, 1);
-                        TextLog.instance.Print("Successfully purchased " +
-                                               Item.GetItem(transactions.get(idx).item).GetName() + "!",
-                                               Color.white);
-                    }
-                    else {
-                        TextLog.instance.Print("Please reload the offers window.", Color.red);
+            if (transactions != null) {
+                Integer idx = itemWindow.GetSelectedIndex();
+                if (idx != null) {
+                    if (data.gold >= transactions.get(idx).value) {
+                        if (RequestTransaction(idx)) {
+                            data.gold -= transactions.get(idx).value;
+                            data.inventory.AddItem(transactions.get(idx).item, 1);
+                            TextLog.instance.Print("Successfully purchased " +
+                                                   Item.GetItem(transactions.get(idx).item).GetName() + "!",
+                                                   Color.white);
+                            PlayerData.Save();
+                        }
+                        else {
+                            TextLog.instance.Print("Please reload the offers window.", Color.red);
+                        }
+
                         itemWindow = null;
                         transactions = null;
                         ShowButtons();
                     }
+                    else {
+                        TextLog.instance.Print("Not enough gold.", Color.red);
+                    }
                 }
-                else {
-                    TextLog.instance.Print("Not enough gold.", Color.red);
+            }
+            else {
+                Item it = itemWindow.GetSelectedItem();
+                if (it != null && textInput.Finished()) {
+                    int price = Integer.parseInt(textInput.GetInput());
+                    if (CreateTransaction(it, price)) {
+                        data.inventory.TakeItem(it.GetID(), 1);
+                        TextLog.instance.Print("Your " + it.GetName() + " was put on sale for " + price + "G.",
+                                               Color.white);
+                    }
+                    else {
+                        TextLog.instance.Print("Transaction rejected, please retry.", Color.red);
+                    }
+                    itemWindow = null;
+                    textInput = null;
+                    ShowButtons();
                 }
             }
         }
@@ -124,7 +147,10 @@ public class MarketScene extends GameScene {
             HideButtons();
         }
         else if (sellButton.WasPressed()) {
-            // TODO: LOL
+            itemWindow = new ItemWindow(assets, "img/window.png", 0, 0, data.inventory, false, null, null);
+            textInput = new TextInput(assets, TextInput.NUMERIC, (int) (Config.SCREEN_WIDTH * 0.75),
+                                      (int) (Config.SCREEN_HEIGHT * 0.66));
+            HideButtons();
         }
 
         TextLog.instance.Update();
@@ -142,6 +168,10 @@ public class MarketScene extends GameScene {
 
         if (itemWindow != null) {
             itemWindow.render(renderers);
+        }
+
+        if (textInput != null) {
+            textInput.Render(screen);
         }
 
         TextLog.instance.Render(Config.SCREEN_WIDTH / 2, (int) (0.9 * Config.SCREEN_HEIGHT), Corner.CENTER);
@@ -198,10 +228,8 @@ public class MarketScene extends GameScene {
             ArrayList<Transaction> ts = new ArrayList<Transaction>();
             Call call = new Call("uRPG.cityDriver", "RequestTransactionList");
             Response response = gateway.callService(device, call);
-            int length = (Integer) (response.getResponseData("length"));
             ArrayList<String> transactionstxt = (ArrayList<String>) response.getResponseData("transactions");
-            for (int i = 0; i < length; ++i) {
-                String s = transactionstxt.get(i);
+            for (String s : transactionstxt) {
                 ts.add(Transaction.FromString(s));
             }
             return ts;
@@ -224,7 +252,7 @@ public class MarketScene extends GameScene {
             Transaction t = transactions.get(idx);
             Call call = new Call("uRPG.cityDriver", "RequestTransaction");
             call.addParameter("sellerUUID", t.seller.toString());
-            call.addParameter("item", "" + t.item);
+            call.addParameter("item", t.item);
             call.addParameter("price", t.value);
             Response response = gateway.callService(device, call);
             return Boolean.valueOf(response.getResponseString("confirmation"));
@@ -261,6 +289,27 @@ public class MarketScene extends GameScene {
         return ts;
     }
 
+    private boolean CreateTransaction(Item item, int price) {
+
+        UpDevice device = FindCity();
+        if (device == null) {
+            System.out.println("Error contacting city");
+            return false;
+        }
+        try {
+            Call call = new Call("uRPG.cityDriver", "CreateTransaction");
+            call.addParameter("playerUUID", data.uuid.toString());
+            call.addParameter("item", item.GetID());
+            call.addParameter("price", price);
+            Response response = gateway.callService(device, call);
+            return (Boolean) response.getResponseData("confirmation");
+        }
+        catch (ServiceCallException ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
     private void ShowButtons() {
         buyButton.Show();
         sellButton.Show();
@@ -274,9 +323,10 @@ public class MarketScene extends GameScene {
     public void OnKeyDown(Event event, Subject subject) {
         if (!frozen) {
             if (((KeyboardEvent) event).getKey() == 1) {
-                if (itemWindow == null) {
+                if (itemWindow != null) {
                     itemWindow = null;
                     transactions = null;
+                    textInput = null;
                     ShowButtons();
                 }
                 else {

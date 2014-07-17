@@ -1,5 +1,5 @@
 # ID NAME           SPRITE                       CLASS      MOVE HP  MP ATK DEF MAG RES SPD  RANK   BOSS    AGGRO
-001 Test_Enemy      img/char/testenemy.png       WARRIOR     2   10  10  6   6   6   6   6    1      0       0.3
+# 001 Test_Enemy      img/char/testenemy.png       WARRIOR     2   10  10  6   6   6   6   6    1      0       0.3
 002 Blue_Slime      img/char/slime.png           WARRIOR     1   15   1  12  8   1   8   10   1      0       0.3
 003 Green_Slime     img/char/greenslime.png      WARRIOR     1   15   1  11  8   1   8   11   1      0       0.3
 004 Red_Slime       img/char/redslime.png        WARRIOR     1   18   1  10  8   1   8   11   1      0       0.3

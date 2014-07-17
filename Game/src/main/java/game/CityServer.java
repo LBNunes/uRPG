@@ -53,8 +53,6 @@ public class CityServer extends GameScene {
     private Text           cityName;
     private Text           pressEsc;
 
-    private long           lastRefresh;
-
     public CityServer() {
         screen = GameComponents.get(ScreenManager.class).create();
         screen.open("uRPG", 200, 100, false, Config.WINDOW_ICON);
@@ -69,8 +67,6 @@ public class CityServer extends GameScene {
         pressEsc = assets.newText("font/seguisb.ttf", "Press ESC to quit");
 
         gateway = GameComponents.get(Gateway.class);
-
-        lastRefresh = 0;
     }
 
     @Override
@@ -80,6 +76,8 @@ public class CityServer extends GameScene {
             CityData.Save();
             GameComponents.get(Game.class).quit();
         }
+
+        data.Refresh(assets);
     }
 
     @Override

@@ -87,6 +87,7 @@ public class GuildScene extends GameScene {
                                                    Color.white);
                         }
                         i.remove();
+                        PlayerData.Save();
                     }
                     catch (Exception e) {
                         TextLog.instance.Print("Failed to contact city.", Color.red);
@@ -111,6 +112,7 @@ public class GuildScene extends GameScene {
                                                        Color.white);
                             }
                             i.remove();
+                            PlayerData.Save();
                         }
                         catch (Exception e) {
                             TextLog.instance.Print("Failed to contact city.", Color.red);
@@ -136,6 +138,7 @@ public class GuildScene extends GameScene {
                 if (RequestMission(m)) {
                     data.missions.add(m);
                     TextLog.instance.Print("Successfully took on a mission!", Color.white);
+                    PlayerData.Save();
                 }
                 else {
                     TextLog.instance.Print("You cannot take a new mission yet.", Color.red);
@@ -291,7 +294,7 @@ public class GuildScene extends GameScene {
     public void OnKeyDown(Event event, Subject subject) {
         if (!frozen) {
             if (((KeyboardEvent) event).getKey() == 1) {
-                if (missionWindow == null) {
+                if (missionWindow != null) {
                     missionWindow = null;
                     ShowButtons();
                 }

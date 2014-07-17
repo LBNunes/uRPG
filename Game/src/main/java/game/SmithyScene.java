@@ -107,6 +107,8 @@ public class SmithyScene extends GameScene {
                     PlayerData.Save();
                     window.Freeze();
                     window = null;
+                    craftButton.Show();
+                    viewAllButton.Show();
                 }
             }
         }

@@ -134,7 +134,8 @@ public class CityScene extends GameScene {
         cityAffinity.options(null, Config.WORLD_FONT_SIZE / 2, true);
 
         CheckEnergyRestore();
-        data.DiscoverCity(info.uuid, info.name);
+        PlayerData.DiscoverCity(info.uuid, info.name);
+        PlayerData.Save();
 
         playerEnergy = assets.newText(Config.GOLD_FONT, "" + data.energy + " / " + maxEnergy);
         playerEnergy.options(null, Config.GOLD_SIZE, true);
@@ -305,6 +306,8 @@ public class CityScene extends GameScene {
                 data.lastRefresh = currentTime;
                 playerEnergy.setText("" + data.energy + " / " + maxEnergy);
             }
+
+            PlayerData.Save();
         }
     }
 

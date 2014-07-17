@@ -365,36 +365,23 @@ public class CityData {
         }
 
         int enemy = Enemy.GetEnemyOfRank(rank * 2, boss);
-        int amount = 5 + new Random().nextInt(4);
-        int reward = 100 + rank * 30 + amount * 10;
+        int eRank = Enemy.GetEnemy(enemy).rank;
+        int amount = boss ? 1 : 2 + new Random().nextInt(4);
+        int reward = 100 + eRank * 30 + amount * 10;
 
-        return new KillMission(uuid, "The City of " + name, reward, rank, enemy, amount);
+        return new KillMission(uuid, "The City of " + name, reward, eRank, enemy, amount);
     }
 
     private Mission GenerateVisitAreaMission() {
 
         final int AREA_MISSION_REWARD = 200;
-        Random rand = new Random();
         int[] areas = Area.GenerateAreaSet(EnvironmentInformation.GetSSID());
-        int area;
-
-        if (areas.length >= Area.GetNumberOfAreas()) {
-            area = areas[rand.nextInt(areas.length)];
+        int area = Area.GetRandomArea();
+        if (area == areas[0] || area == areas[1] || area == areas[2]) {
             return new VisitAreaMission(uuid, "The City of " + name, AREA_MISSION_REWARD / 2, 1, area);
         }
-        else {
-            while (true) {
-                area = rand.nextInt(Area.GetNumberOfAreas() + 1);
-                if (area == areas[0] || area == areas[1] || area == areas[2]) {
-                    continue;
-                }
-                if (Area.GetArea(area) == null) {
-                    continue;
-                }
-                break;
-            }
-        }
-        return new VisitAreaMission(uuid, "The City of " + name, AREA_MISSION_REWARD, 1, area);
+        else
+            return new VisitAreaMission(uuid, "The City of " + name, AREA_MISSION_REWARD, 1, area);
     }
 
     private Mission GenerateVisitCityMission() {
@@ -419,9 +406,10 @@ public class CityData {
     private Mission GenerateFetchMission(int rank) {
 
         int item = Item.GetLootOfRank(rank);
-        int reward = 100 + 20 * rank;
+        int iRank = Item.GetItem(item).GetRank();
+        int reward = 100 + 20 * iRank;
 
-        return new FetchMission(uuid, "The City of " + name, reward, rank, item);
+        return new FetchMission(uuid, "The City of " + name, reward, iRank, item);
 
     }
 
@@ -514,6 +502,8 @@ public class CityData {
         if (System.currentTimeMillis() - lastRefresh < ONE_DAY_MILISECONDS / 4) {
             return;
         }
+
+        System.out.println("Refreshing city data...");
 
         LinkedList<Transaction> oldTransactions = marketTransactions;
 

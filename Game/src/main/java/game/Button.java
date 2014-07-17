@@ -118,6 +118,10 @@ public class Button extends GameObject {
         Reset();
     }
 
+    public void Press() {
+        pressed = true;
+    }
+
     public boolean WasPressed() {
         return pressed;
     }
@@ -128,6 +132,14 @@ public class Button extends GameObject {
 
     public void ShowTextOnMouseOver(boolean flag) {
         showTextOnMouseOver = flag;
+    }
+
+    public int GetWidth() {
+        return box.w;
+    }
+
+    public int GetHeight() {
+        return box.h;
     }
 
     public void OnButtonDown(Event event, Subject subject) {

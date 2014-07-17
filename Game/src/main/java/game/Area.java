@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 public class Area {
@@ -60,8 +61,18 @@ public class Area {
         return table.get(id);
     }
 
-    public static int GetNumberOfAreas() {
-        return table.size();
+    public static int GetRandomArea() {
+        Set<Integer> keys = table.keySet();
+        int roll = new Random().nextInt(keys.size());
+        for (int key : keys) {
+            if (roll == 0) {
+                return key;
+            }
+            else {
+                --roll;
+            }
+        }
+        return 1;
     }
 
     public static int[] GetEnemySet(int id, boolean isDay, int rank) {

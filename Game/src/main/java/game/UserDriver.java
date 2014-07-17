@@ -39,8 +39,7 @@ import org.unbiquitous.uos.core.messageEngine.messages.Response;
 
 public class UserDriver implements UosDriver {
 
-    private PlayerData data;
-    private UpDriver   driver;
+    private UpDriver driver;
 
     public UserDriver() {
         driver = new UpDriver("uRPG.userDriver");
@@ -58,7 +57,6 @@ public class UserDriver implements UosDriver {
 
     public void init(Gateway gateway, InitialProperties properties, String instanceId) {
         System.out.println("Starting up User Driver...");
-        data = PlayerData.GetData();
     }
 
     public void destroy() {
@@ -67,6 +65,9 @@ public class UserDriver implements UosDriver {
     }
 
     public void GetUserInfo(Call call, Response response, CallContext context) {
+
+        PlayerData data = PlayerData.GetData();
+
         response.addParameter("uuid", data.uuid.toString());
         response.addParameter("leaderName", data.party.get(0).name);
         response.addParameter("leaderClass", data.party.get(0).classID.toString());

@@ -220,7 +220,7 @@ public class PlayerData {
                 w.write(m.toString() + '\n');
             }
 
-            w.write("" + instance.knownCities.size());
+            w.write("" + instance.knownCities.size() + "\n");
 
             for (KnownCity c : instance.knownCities) {
                 w.write(c.toString() + '\n');

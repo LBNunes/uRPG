@@ -83,7 +83,7 @@ public abstract class SelectionWindow extends GameObject {
         lastMouseY = y;
         visible = true;
         frozen = false;
-        selectedIndex = -1;
+        selectedIndex = null;
     }
 
     @Override

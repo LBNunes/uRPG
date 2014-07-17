@@ -60,7 +60,7 @@ public class ItemWindow extends SelectionWindow {
         this.list = list;
         for (int i = 0; i < list.Size(); ++i) {
             Item item = Item.GetItem(list.itemList.get(i).item);
-            if (p.Eval(item)) {
+            if (p == null || p.Eval(item)) {
                 options.add(new ItemOption(assets, options.size(), i, x + OPTION_OFFSET_X,
                                            y + OPTION_OFFSET_Y,
                                            WINDOW_WIDTH * this.frame.getWidth() / 3 - OPTION_OFFSET_X * 2,
@@ -84,7 +84,7 @@ public class ItemWindow extends SelectionWindow {
                                            y + OPTION_OFFSET_Y,
                                            WINDOW_WIDTH * this.frame.getWidth() / 3 - OPTION_OFFSET_X * 2,
                                            (int) (1.2 * this.frame.getHeight()),
-                                           swappable, item, list.itemList.get(i).amount,
+                                           swappable, item, 1,
                                            goldCosts == null ? 0 : goldCosts.get(i)));
             }
         }
@@ -197,7 +197,7 @@ public class ItemWindow extends SelectionWindow {
             }
 
             if (_cost > 0) {
-                cost = assets.newText("font/seguisb.ttf", "" + cost + "G");
+                cost = assets.newText("font/seguisb.ttf", "" + _cost + "G");
             }
             else {
                 cost = null;

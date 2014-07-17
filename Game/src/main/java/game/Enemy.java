@@ -87,18 +87,30 @@ public class Enemy {
 
     public static int GetEnemyOfRank(int rank, boolean boss) {
 
-        int selected = 1;
-        int deltaRank = 9999999;
+        ArrayList<Integer> selected = new ArrayList<Integer>();
         Set<Integer> keys = table.keySet();
-        for (int key : keys) {
-            int enemyRank = table.get(key).rank;
-            boolean isBoss = table.get(key).boss;
-            if (Math.abs(enemyRank - rank) < deltaRank && isBoss == boss) {
-                deltaRank = Math.abs(enemyRank - rank);
-                selected = key;
+        while (selected.size() < 5) {
+            int deltaRank = 9999999;
+            int selection = 0;
+            for (int key : keys) {
+                if (selected.contains(key)) {
+                    continue;
+                }
+                int enemyRank = table.get(key).rank;
+                boolean isBoss = table.get(key).boss;
+                if (Math.abs(enemyRank - rank) < deltaRank && isBoss == boss) {
+                    deltaRank = Math.abs(enemyRank - rank);
+                    selection = key;
+                }
             }
+            selected.add(selection);
         }
-        return selected;
+        System.out.println("Searched for enemy of rank " + rank + ". Found ");
+        for (Integer i : selected) {
+            System.out.print(i + " ");
+        }
+        System.out.println("");
+        return selected.get((int) Math.random());
     }
 
     public static ArrayList<Item> GetLoot(int enemyID, int enemyRank) {
@@ -267,7 +279,9 @@ public class Enemy {
                 while (tokenizer.hasMoreTokens()) {
                     _enemy = Integer.parseInt(tokenizer.nextToken());
                     _prob = Float.parseFloat(tokenizer.nextToken());
-                    GetEnemy(_enemy).possibleLoot.add(new Loot(_itemID, _prob));
+                    if (GetEnemy(_enemy) != null) {
+                        GetEnemy(_enemy).possibleLoot.add(new Loot(_itemID, _prob));
+                    }
                 }
             }
 

@@ -349,7 +349,7 @@ public class WorldMapScene extends GameScene {
 
     private void RefreshCities(boolean force) {
         long time = System.currentTimeMillis();
-        if (force || time - lastCityRefresh > 20000) {
+        if (force || time - lastCityRefresh > 10000) {
             lastCityRefresh = time;
             cities.clear();
             cityButtons.clear();

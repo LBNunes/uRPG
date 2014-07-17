@@ -138,6 +138,7 @@ public class AcademyScene extends GameScene {
                     abilityWindow = null;
                     entityWindow = null;
                     ShowButtons();
+                    PlayerData.Save();
                 }
             }
             else {
@@ -150,6 +151,7 @@ public class AcademyScene extends GameScene {
                                 a.rank <= e.jobLevel &&
                                 !e.abilities.contains(a)) {
                                 list.add(e);
+                                PlayerData.Save();
                             }
                         }
                         entityWindow = new EntityWindow(assets, "img/window.png", 0, 0, list, false, false, null);
@@ -173,6 +175,7 @@ public class AcademyScene extends GameScene {
                             data.party.add(e);
                             TextLog.instance.Print("Successfully recruited " + e.name + "!", Color.white);
                             data.gold -= 500 + 150 * e.jobLevel;
+                            PlayerData.Save();
                         }
                         else {
                             TextLog.instance.Print("Please reload the recruits screen.", Color.red);
@@ -191,6 +194,7 @@ public class AcademyScene extends GameScene {
                         data.gold -= Config.PROMOTION_COST;
                         TextLog.instance.Print(e.name + " was successfully promoted to the " +
                                                Classes.GetClassName(promotion1) + " class!", Color.white);
+                        PlayerData.Save();
                         entityWindow = null;
                         ShowButtons();
                         HideButtons2();
@@ -200,6 +204,7 @@ public class AcademyScene extends GameScene {
                         data.gold -= Config.PROMOTION_COST;
                         TextLog.instance.Print(e.name + " was successfully promoted to the " +
                                                Classes.GetClassName(promotion2) + " class!", Color.white);
+                        PlayerData.Save();
                         entityWindow = null;
                         ShowButtons();
                         HideButtons2();
