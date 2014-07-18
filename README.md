@@ -32,6 +32,8 @@ Além disso, na academia, personagens da classe com Job Level maior ou igual a 8
 
 Uma cidade não compartilha dados com outras, logo, existe uma motivação para o jogador tentar visitar várias cidades, tanto para melhorar diferentes classes, como para aceitar mais missões, como para buscar itens que podem estar à venda nas mesmas. 
 
+## Smartspace / Recursos / Serviços
+
 O jogo se dá em ambientes fechados onde há uma rede, com PCs e laptops conectados. Os laptops devem dispor de webcam.
 
 A aplicação oferece os seguintes recursos e serviços:
