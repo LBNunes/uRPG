@@ -49,3 +49,10 @@ A aplicação oferece os seguintes recursos e serviços:
   - Geração de batalhas e espólios
   - Checagem de missões completadas
   - Checagem de dia e noite via webcam
+
+#### Features faltantes
+
+- AI dos inimigos
+- Criação de missões por jogadores
+- Visão de todas as receitas (a atual é pouco otimizada e pode crashar)
+- Bônus nos stats durante batalhas por estar perto de outro jogador
